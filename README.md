@@ -41,15 +41,13 @@ A modern, user-friendly web application for tracking meal calories and nutrition
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/meal-calory.git
-   cd meal-calory
+   git clone https://github.com/gaur-adi/meal-calorie-frontend-aditya-gaur.git
+   cd meal-calorie-frontend-aditya-gaur
    ```
 
 2. Install dependencies:
    ```bash
    npm install
-   # or
-   yarn install
    ```
 
 3. Set up environment variables by creating a `.env.local` file:
@@ -107,21 +105,3 @@ The dashboard is the main interface where users can:
 - Automatically calculate total calories
 - Save meals to your history for future reference
 
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch: `git checkout -b feature/my-new-feature`
-3. Commit your changes: `git commit -am 'Add some feature'`
-4. Push to the branch: `git push origin feature/my-new-feature`
-5. Submit a pull request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
-
-## Acknowledgements
-
-- Next.js team for the amazing framework
-- Material UI for the component library
-- Prisma team for the ORM
-- All contributors and users of this application
