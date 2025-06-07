@@ -3,92 +3,158 @@
 import { useMealStore } from "@/stores/mealStore";
 import {
   Card,
-  CardContent,
   Typography,
   Box,
-  List,
-  ListItem,
-  ListItemText,
-  Divider,
-  Chip,
-  Avatar,
-  useTheme
 } from "@mui/material";
 import HistoryIcon from "@mui/icons-material/History";
-import LocalDiningIcon from "@mui/icons-material/LocalDining";
+import RestaurantIcon from '@mui/icons-material/Restaurant';
 
 export function MealHistory() {
   const { mealHistory = [] } = useMealStore();
-  const theme = useTheme();
-
-  if (!mealHistory || mealHistory.length === 0) {
-    return null;
-  }
 
   return (
     <Card
       sx={{
-        mt: 6,
-        borderRadius: 4,
-        boxShadow: 6,
-        background: "linear-gradient(135deg, #e0e7ff 0%, #f0fdfa 100%)",
-        border: `1px solid ${theme.palette.divider}`,
+        borderRadius: '16px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        border: 'none',
       }}
     >
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-          <Avatar sx={{ bgcolor: '#2563eb', mr: 2 }}>
-            <HistoryIcon />
-          </Avatar>
-          <Typography variant="h5" sx={{ fontWeight: 700, color: '#2563eb' }}>
-            Meal History
-          </Typography>
+      {/* Blue header */}
+      <Box sx={{ 
+        p: 2, 
+        bgcolor: '#4361ee',
+        display: 'flex', 
+        alignItems: 'center',
+      }}>
+        <Box
+          sx={{
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'rgba(255, 255, 255, 0.2)',
+            mr: 2,
+          }}
+        >
+          <HistoryIcon sx={{ color: 'white' }} />
         </Box>
-        <List>
-          {mealHistory.map((meal, index) => (
-            <Box key={meal.timestamp}>
-              <ListItem
-                sx={{
-                  borderRadius: 3,
-                  transition: 'background 0.2s',
-                  '&:hover': { background: '#f0fdfa' },
-                  mb: 1,
-                  px: 2,
+        <Typography variant="h6" sx={{ fontWeight: 500, color: 'white' }}>
+          Meal History
+        </Typography>
+      </Box>
+      
+      {/* Scrollable white content area */}
+      <Box
+        sx={{
+          flexGrow: 1,
+          bgcolor: 'white',
+          overflowY: 'auto',
+          maxHeight: 'calc(100vh - 200px)',
+          p: 2,
+        }}
+      >
+        {(!mealHistory || mealHistory.length === 0) ? (
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            flexDirection: 'column',
+            height: '100%',
+            minHeight: '200px',
+            py: 4
+          }}>
+            <RestaurantIcon sx={{ color: '#94a3b8', fontSize: 48, mb: 2 }} />
+            <Typography color="text.secondary" sx={{ textAlign: 'center' }}>
+              No meal history yet.
+              <br />
+              Calculate your first meal&apos;s calories!
+            </Typography>
+          </Box>
+        ) : (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', mx: -1 }}>
+            {mealHistory.map((meal) => (
+              <Box 
+                key={meal.timestamp} 
+                sx={{ 
+                  width: '50%', 
+                  p: 1,
+                  boxSizing: 'border-box'
                 }}
-                disableGutters
               >
-                <Avatar sx={{ bgcolor: '#3b82f6', mr: 2 }}>
-                  <LocalDiningIcon />
-                </Avatar>
-                <ListItemText
-                  primary={
-                    <Typography variant="h6" sx={{ fontWeight: 600, color: '#2563eb' }}>
-                      {meal.dishName}
-                    </Typography>
-                  }
-                  secondary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mt: 1 }}>
-                      <Typography variant="body2" color="text.secondary">
-                        {new Date(meal.timestamp).toLocaleString()}
-                      </Typography>
-                      <Chip
-                        size="small"
-                        label={`${meal.totalCalories} cal`}
-                        sx={{
-                          fontWeight: 700,
-                          bgcolor: meal.totalCalories < 200 ? '#bbf7d0' : '#fef9c3',
-                          color: meal.totalCalories < 200 ? '#059669' : '#b45309',
+                <Box 
+                  sx={{ 
+                    display: 'flex',
+                    bgcolor: 'rgba(241, 245, 249, 0.5)',
+                    borderRadius: '12px',
+                    p: 1.5,
+                    border: '1px solid rgba(203, 213, 225, 0.4)',
+                  }}
+                >
+                  <Box
+                    sx={{
+                      mt: 0.5,
+                      mr: 1.5,
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                    }}
+                  >
+                    <RestaurantIcon sx={{ color: '#4361ee' }} />
+                  </Box>
+                  
+                  <Box sx={{ flexGrow: 1 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <Typography 
+                        sx={{ 
+                          fontWeight: 500, 
+                          color: '#1e293b',
+                          fontSize: '0.95rem',
+                          mb: 0.5,
                         }}
-                      />
+                      >
+                        {meal.dishName}
+                      </Typography>
+                      <Box
+                        sx={{
+                          bgcolor: meal.totalCalories < 100 ? '#bbf7d0' : '#fef9c3',
+                          color: meal.totalCalories < 100 ? '#059669' : '#b45309',
+                          fontSize: '0.75rem',
+                          fontWeight: 600,
+                          borderRadius: '4px',
+                          py: 0.5,
+                          px: 1,
+                          ml: 1,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {meal.totalCalories} cal
+                      </Box>
                     </Box>
-                  }
-                />
-              </ListItem>
-              {index < mealHistory.length - 1 && <Divider />}
-            </Box>
-          ))}
-        </List>
-      </CardContent>
+                    
+                    <Typography 
+                      variant="caption" 
+                      color="text.secondary"
+                      sx={{ fontSize: '0.75rem', display: 'block' }}
+                    >
+                      {new Date(meal.timestamp).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </Typography>
+                  </Box>
+                </Box>
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Box>
     </Card>
   );
 } 

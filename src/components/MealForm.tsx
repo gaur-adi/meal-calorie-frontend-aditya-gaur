@@ -3,11 +3,12 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Button, TextField, Box, Typography, CircularProgress } from '@mui/material';
+import { Button, TextField, Box, Typography } from '@mui/material';
 import { useMealStore } from "@/stores/mealStore";
 import toast from "react-hot-toast";
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import PeopleIcon from '@mui/icons-material/People';
+import SearchIcon from '@mui/icons-material/Search';
 
 const mealSchema = z.object({
   dish_name: z.string().min(2, "Enter a dish name"),
@@ -42,155 +43,98 @@ export function MealForm() {
       onSubmit={form.handleSubmit(onSubmit)}
       sx={{
         background: '#fff',
-        borderRadius: '24px',
-        boxShadow: '0 8px 40px rgba(0, 0, 0, 0.08)',
-        p: { xs: 3, sm: 4 },
+        borderRadius: '16px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
+        p: 3,
         width: '100%',
-        maxWidth: 480,
-        mx: 'auto',
-        position: 'relative',
-        overflow: 'hidden',
       }}
     >
-      {/* Gradient accent bar */}
-      <Box sx={{ 
-        position: 'absolute', 
-        top: 0, 
-        left: 0, 
-        right: 0,
-        height: '8px', 
-        background: 'linear-gradient(90deg, #4361ee 0%, #4895ef 100%)',
-      }} />
-
       <Typography 
-        variant="h4" 
+        variant="h5" 
         component="h2" 
         align="center" 
         sx={{ 
           fontWeight: 600,
           color: '#4361ee',
-          mb: 4,
-          fontSize: { xs: '1.5rem', sm: '1.75rem' },
+          mb: 3,
+          fontSize: '1.5rem',
         }}
       >
         Calculate Meal Calories
       </Typography>
 
-      <Box 
-        sx={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: 3
-        }}
-      >
+      <Box sx={{ mb: 2 }}>
+        <Typography sx={{ mb: 1, fontSize: '0.875rem', fontWeight: 500, color: '#64748b' }}>
+          Dish Name
+        </Typography>
         <TextField
           fullWidth
-          label="Dish Name"
-          variant="outlined"
+          placeholder="e.g. Pizza, Salad, Pasta"
           error={!!form.formState.errors.dish_name}
           helperText={form.formState.errors.dish_name?.message as string}
           InputProps={{
             startAdornment: <RestaurantMenuIcon sx={{ mr: 1, color: 'rgba(0, 0, 0, 0.54)' }} />,
-            sx: {
-              borderRadius: '12px',
-              backgroundColor: 'rgba(67, 97, 238, 0.03)',
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(67, 97, 238, 0.2)',
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#4361ee',
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#4361ee',
-              },
-            }
           }}
+          variant="outlined"
           {...form.register("dish_name")}
         />
+      </Box>
 
+      <Box sx={{ mb: 3 }}>
+        <Typography sx={{ mb: 1, fontSize: '0.875rem', fontWeight: 500, color: '#64748b' }}>
+          Number of Servings
+        </Typography>
         <TextField
           fullWidth
-          label="Number of Servings"
           type="number"
-          variant="outlined"
+          placeholder="1"
           error={!!form.formState.errors.servings}
           helperText={form.formState.errors.servings?.message as string}
           InputProps={{
             startAdornment: <PeopleIcon sx={{ mr: 1, color: 'rgba(0, 0, 0, 0.54)' }} />,
-            sx: {
-              borderRadius: '12px',
-              backgroundColor: 'rgba(67, 97, 238, 0.03)',
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: 'rgba(67, 97, 238, 0.2)',
-              },
-              '&:hover .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#4361ee',
-              },
-              '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-                borderColor: '#4361ee',
-              },
-            }
           }}
+          variant="outlined"
           {...form.register("servings", { valueAsNumber: true })}
         />
+      </Box>
 
-        {error && (
-          <Typography 
-            color="error" 
-            sx={{ 
-              textAlign: 'center',
-              fontSize: '0.875rem',
-              fontWeight: 500,
-              p: 1.5,
-              borderRadius: '8px',
-              backgroundColor: 'rgba(239, 68, 68, 0.08)',
-            }}
-          >
-            {error}
-          </Typography>
-        )}
-
-        <Button
-          type="submit"
-          fullWidth
-          variant="contained"
-          size="large"
-          disabled={loading}
-          sx={{
-            mt: 1,
-            py: 1.5,
-            borderRadius: '12px',
-            fontWeight: 600,
-            fontSize: '1rem',
-            textTransform: 'none',
-            background: 'linear-gradient(90deg, #4361ee 0%, #4895ef 100%)',
-            boxShadow: '0 4px 14px rgba(67, 97, 238, 0.3)',
-            transition: 'all 0.2s ease',
-            '&:hover': {
-              background: 'linear-gradient(90deg, #4361ee 0%, #4895ef 100%)',
-              boxShadow: '0 6px 20px rgba(67, 97, 238, 0.4)',
-              transform: 'translateY(-1px)',
-            },
-            '&:active': {
-              transform: 'translateY(0)',
-            },
-            '&.Mui-disabled': {
-              background: 'linear-gradient(90deg, #94a3b8 0%, #cbd5e1 100%)',
-            }
+      {error && (
+        <Typography 
+          color="error" 
+          sx={{ 
+            textAlign: 'center',
+            fontSize: '0.875rem',
+            fontWeight: 500,
+            p: 1.5,
+            borderRadius: '8px',
+            backgroundColor: 'rgba(239, 68, 68, 0.08)',
+            mb: 2
           }}
         >
-          {loading ? (
-            <CircularProgress 
-              size={24} 
-              sx={{ 
-                color: 'white',
-              }} 
-            />
-          ) : (
-            "Calculate Calories"
-          )}
-        </Button>
-      </Box>
+          {error}
+        </Typography>
+      )}
+
+      <Button
+        type="submit"
+        fullWidth
+        variant="contained"
+        disabled={loading}
+        startIcon={loading ? null : <SearchIcon />}
+        sx={{
+          py: 1.25,
+          borderRadius: '8px',
+          fontWeight: 600,
+          fontSize: '0.95rem',
+          textTransform: 'none',
+          bgcolor: '#4361ee',
+          '&:hover': {
+            bgcolor: '#3854d1',
+          },
+        }}
+      >
+        {loading ? "Calculating..." : "Calculate Calories"}
+      </Button>
     </Box>
   );
 } 

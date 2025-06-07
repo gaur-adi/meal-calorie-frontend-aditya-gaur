@@ -1,65 +1,141 @@
-import { MealResponse } from '@/types/meal';
-import { Card, CardContent, Typography, Box, Divider, List, ListItem, ListItemText, Chip } from '@mui/material';
-import LocalDiningIcon from '@mui/icons-material/LocalDining';
+"use client";
+
+import { Card, Typography, Box, Stack } from '@mui/material';
+import { MealResultType } from "@/types/meal";
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import PeopleIcon from '@mui/icons-material/People';
-import InfoIcon from '@mui/icons-material/Info';
+import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
 
-export function ResultCard({ result }: { result: MealResponse }) {
+interface ResultCardProps {
+  result: MealResultType;
+}
+
+export function ResultCard({ result }: ResultCardProps) {
+  const { dishName, servings, caloriesPerServing, totalCalories } = result;
+  
   return (
-    <Card sx={{ maxWidth: 500, width: '100%', mx: 'auto', mt: 4 }}>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-          <LocalDiningIcon sx={{ mr: 1, color: 'primary.main' }} />
-          <Typography variant="h5" component="h2">
-            {result.dish_name}
-          </Typography>
+    <Card
+      sx={{
+        borderRadius: '16px',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
+        overflow: 'visible',
+        p: 3,
+        pt: 4,
+        position: 'relative',
+        background: '#fff',
+        height: '100%',
+        width: '100%',
+      }}
+    >
+      {/* Icon at the top */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: '-20px',
+          left: '20px',
+          backgroundColor: '#4361ee',
+          width: 40,
+          height: 40,
+          borderRadius: '50%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 10px rgba(67, 97, 238, 0.3)',
+        }}
+      >
+        <RestaurantIcon sx={{ color: 'white' }} />
+      </Box>
+      
+      {/* Meal name */}
+      <Typography 
+        variant="h6" 
+        sx={{ 
+          fontWeight: 500, 
+          mb: 2, 
+          color: '#1e293b'
+        }}
+      >
+        {dishName}
+      </Typography>
+      
+      {/* Stats */}
+      <Stack spacing={1} mb={3}>
+        {/* Servings */}
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center',
+          color: 'text.secondary',
+          fontSize: '0.875rem',
+        }}>
+          <PeopleIcon fontSize="small" sx={{ mr: 1 }} />
+          <Typography variant="body2">{servings} Servings</Typography>
         </Box>
         
-        <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-          <Chip
-            icon={<PeopleIcon />}
-            label={`${result.servings} Servings`}
-            color="primary"
-            variant="outlined"
-          />
-          <Chip
-            icon={<RestaurantIcon />}
-            label={`${result.calories_per_serving} cal/serving`}
-            color="secondary"
-            variant="outlined"
-          />
+        {/* Calories per serving */}
+        <Box sx={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          color: '#ef4444',
+          fontSize: '0.875rem',
+        }}>
+          <LocalFireDepartmentIcon fontSize="small" sx={{ mr: 1 }} />
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              color: '#ef4444',
+              fontWeight: 500,
+            }}
+          >
+            {caloriesPerServing} cal/serving
+          </Typography>
         </Box>
-
-        <Typography variant="h4" color="primary" sx={{ my: 2, textAlign: 'center' }}>
-          {result.total_calories} calories
+      </Stack>
+      
+      {/* Total calories */}
+      <Box 
+        sx={{ 
+          backgroundColor: '#f1f5f9',
+          borderRadius: '12px',
+          p: 2,
+          textAlign: 'center',
+        }}
+      >
+        <Typography 
+          variant="caption" 
+          component="div"
+          sx={{ 
+            color: '#64748b',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            mb: 0.5,
+          }}
+        >
+          TOTAL CALORIES
         </Typography>
-
-        <Divider sx={{ my: 2 }} />
-
-        {result.ingredients && result.ingredients.length > 0 && (
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
-              <InfoIcon sx={{ mr: 1 }} />
-              Ingredient Breakdown
-            </Typography>
-            <List>
-              {result.ingredients.map((ing, i) => (
-                <ListItem key={i} divider={i < result.ingredients!.length - 1}>
-                  <ListItemText
-                    primary={ing.name}
-                    secondary={`${ing.calories} calories`}
-                  />
-                </ListItem>
-              ))}
-            </List>
-          </Box>
-        )}
-
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2, textAlign: 'center' }}>
-          Source: {result.source}
+        
+        <Typography 
+          variant="h3" 
+          sx={{ 
+            fontWeight: 700,
+            color: '#4361ee',
+          }}
+        >
+          {totalCalories}
         </Typography>
-      </CardContent>
+      </Box>
+      
+      <Typography 
+        variant="caption" 
+        component="div" 
+        sx={{ 
+          mt: 2,
+          textAlign: 'center',
+          color: '#94a3b8',
+          fontSize: '0.75rem',
+        }}
+      >
+        Source: USDA Food Database
+      </Typography>
     </Card>
   );
 } 

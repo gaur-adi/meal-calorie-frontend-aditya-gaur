@@ -15,4 +15,13 @@ export type MealResponse = {
   total_calories: number;
   source: string;
   ingredients?: IngredientBreakdown[];
+};
+
+export type MealResultType = {
+  dishName: string;
+  servings: number;
+  caloriesPerServing: number;
+  totalCalories: number;
+  source?: string;
+  ingredients?: IngredientBreakdown[];
 }; 
