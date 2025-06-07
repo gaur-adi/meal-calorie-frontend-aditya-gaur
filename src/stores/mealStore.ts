@@ -1,46 +1,76 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { MealRequest, MealResponse } from '@/types/meal';
-import { getCalories, searchUSDAFood } from '@/lib/api';
+import { searchUSDAFood } from '@/lib/api';
 
-export type MealState = {
+interface Meal {
+  dishName: string;
+  totalCalories: number;
+  timestamp: string;
+}
+
+interface MealState {
   loading: boolean;
   error: string | null;
-  result: MealResponse | null;
-  history: MealResponse[];
-  fetchCalories: (data: MealRequest, token?: string) => Promise<void>;
-  addToHistory: (meal: MealResponse) => void;
-};
+  mealHistory: Meal[];
+  searchCalories: (query: string, dishName?: string) => Promise<void>;
+  addToHistory: (meal: Meal) => void;
+}
 
-export const useMealStore = create<MealState>((set) => ({
-  loading: false,
-  error: null,
-  result: null,
-  history: [],
-  fetchCalories: async (data, token) => {
-    set({ loading: true, error: null });
-    try {
-      // Call USDA API
-      const usdaData = await searchUSDAFood(data.dish_name);
-      const food = usdaData.foods[0];
-      if (!food) {
-        throw new Error('Food not found');
-      }
-      const caloriesPer100g = food.foodNutrients.find((n: any) => n.nutrientName === 'Energy')?.value || 0;
-      const caloriesPerServing = (caloriesPer100g * food.servingSize) / 100;
-      const totalCalories = caloriesPerServing * data.servings;
+export const useMealStore = create<MealState>()(
+  persist(
+    (set, get) => ({
+      loading: false,
+      error: null,
+      mealHistory: [],
+      searchCalories: async (query: string, dishName?: string) => {
+        try {
+          set({ loading: true, error: null });
+          console.log('Starting calorie search for:', query);
 
-      const result: MealResponse = {
-        dish_name: data.dish_name,
-        servings: data.servings,
-        calories_per_serving: Math.round(caloriesPerServing),
-        total_calories: Math.round(totalCalories),
-        source: 'USDA FoodData Central',
-      };
+          const usdaData = await searchUSDAFood(query);
+          console.log('USDA data received:', usdaData);
 
-      set((state) => ({ result, history: [...state.history, result], loading: false }));
-    } catch (err: any) {
-      set({ error: err?.message || 'Failed to fetch calories', loading: false });
+          if (!usdaData.foods || usdaData.foods.length === 0) {
+            throw new Error('No food items found. Please try a different search term.');
+          }
+
+          const food = usdaData.foods[0];
+          const energyNutrient = food.foodNutrients?.find(
+            (n: any) => n.nutrientName?.toLowerCase().includes('energy')
+          );
+
+          if (!energyNutrient) {
+            throw new Error('Calorie information not available for this food item.');
+          }
+
+          const servingSize = food.servingSize || 100;
+          const totalCalories = Math.round((energyNutrient.value * servingSize) / 100);
+
+          const meal: Meal = {
+            dishName: dishName || query,
+            totalCalories,
+            timestamp: new Date().toISOString(),
+          };
+
+          get().addToHistory(meal);
+          set({ loading: false });
+        } catch (error: any) {
+          console.error('Error in searchCalories:', error);
+          set({
+            loading: false,
+            error: error.message || 'Failed to fetch calories. Please try again.',
+          });
+        }
+      },
+      addToHistory: (meal: Meal) => {
+        set((state) => ({
+          mealHistory: [meal, ...state.mealHistory],
+        }));
+      },
+    }),
+    {
+      name: 'meal-storage',
     }
-  },
-  addToHistory: (meal) => set((state) => ({ history: [...state.history, meal] })),
-})); 
+  )
+); 

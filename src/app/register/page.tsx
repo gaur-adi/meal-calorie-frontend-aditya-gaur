@@ -1,12 +1,96 @@
-import { AuthForm } from '@/components/AuthForm';
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/authStore";
+import { TextField, Button, Paper, Typography, Box, Alert } from "@mui/material";
+import Link from "next/link";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const register = useAuthStore((state) => state.register);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!name || !email || !password) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    const success = register(email, password, name);
+    if (success) {
+      router.push("/dashboard");
+    } else {
+      setError("Email already exists");
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="w-full max-w-md p-8 bg-white dark:bg-zinc-900 rounded shadow">
-        <h1 className="text-2xl font-bold mb-6 text-center">Register</h1>
-        <AuthForm mode="register" />
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 px-4">
+      <Paper elevation={3} className="w-full max-w-md p-8">
+        <Typography variant="h4" component="h1" className="text-center mb-6">
+          Register
+        </Typography>
+        
+        {error && (
+          <Alert severity="error" className="mb-4">
+            {error}
+          </Alert>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <TextField
+            fullWidth
+            label="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
+
+          <TextField
+            fullWidth
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            required
+          />
+
+          <Button
+            type="submit"
+            variant="contained"
+            fullWidth
+            size="large"
+            className="mt-4"
+          >
+            Register
+          </Button>
+        </form>
+
+        <Box className="mt-4 text-center">
+          <Typography variant="body2">
+            Already have an account?{" "}
+            <Link href="/login" className="text-blue-600 hover:text-blue-800">
+              Login here
+            </Link>
+          </Typography>
+        </Box>
+      </Paper>
     </div>
   );
 } 

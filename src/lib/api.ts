@@ -3,6 +3,10 @@ import axios from 'axios';
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 const USDA_API_KEY = process.env.NEXT_PUBLIC_USDA_API_KEY;
 
+if (!USDA_API_KEY) {
+  console.error('USDA API key is not set in environment variables');
+}
+
 export const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
@@ -23,16 +27,37 @@ export const getCalories = (data: any, token?: string) =>
 // USDA FoodData Central API call
 export const searchUSDAFood = async (query: string) => {
   try {
-    const res = await axios.get(`https://api.nal.usda.gov/fdc/v1/foods/search`, {
+    console.log('Searching USDA API for:', query);
+    console.log('Using API key:', USDA_API_KEY ? 'Present' : 'Missing');
+
+    const response = await axios.get(`https://api.nal.usda.gov/fdc/v1/foods/search`, {
       params: {
         query,
         api_key: USDA_API_KEY,
         pageSize: 1,
       },
     });
-    return res.data;
-  } catch (err) {
-    console.error('USDA API error:', err);
-    throw new Error('Failed to fetch food data from USDA');
+
+    console.log('USDA API Response:', response.data);
+
+    if (!response.data.foods || response.data.foods.length === 0) {
+      throw new Error('No food items found');
+    }
+
+    return response.data;
+  } catch (error: any) {
+    console.error('USDA API error details:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+    });
+    
+    if (error.response?.status === 401) {
+      throw new Error('Invalid USDA API key');
+    } else if (error.response?.status === 404) {
+      throw new Error('Food not found');
+    } else {
+      throw new Error(error.response?.data?.message || 'Failed to fetch food data from USDA');
+    }
   }
 }; 

@@ -1,15 +1,34 @@
-import { MealForm } from '@/components/MealForm';
-import { ResultCard } from '@/components/ResultCard';
-import { useMealStore } from '@/stores/mealStore';
+"use client";
+
+import { useMealStore } from "@/stores/mealStore";
+import { MealForm } from "@/components/MealForm";
+import { ResultCard } from "@/components/ResultCard";
+import { useAuthStore } from "@/stores/authStore";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function CaloriesPage() {
   const { result } = useMealStore();
+  const { isAuthenticated } = useAuthStore();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, router]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col min-h-screen items-center justify-start pt-12">
       <h1 className="text-3xl font-bold mb-2">Meal Calorie Lookup</h1>
-      <p className="mb-8 text-zinc-500">Find calories for your favorite dishes.</p>
-      <MealForm />
-      {result && <ResultCard result={result} />}
+      <div className="w-full max-w-4xl p-4">
+        <MealForm />
+        {result && <ResultCard result={result} />}
+      </div>
     </div>
   );
 } 

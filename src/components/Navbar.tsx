@@ -4,6 +4,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/authStore";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { AppBar, Toolbar, Button, Container, Box, Typography } from '@mui/material';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
+import LogoutIcon from '@mui/icons-material/Logout';
 
 export function Navbar() {
   const { logout } = useAuthStore();
@@ -15,17 +18,45 @@ export function Navbar() {
   };
 
   return (
-    <nav className="bg-white dark:bg-zinc-900 shadow p-4">
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <div className="flex space-x-4">
-          <Link href="/dashboard" className="text-blue-500 hover:underline">Dashboard</Link>
-          <Link href="/calories" className="text-blue-500 hover:underline">Calories</Link>
-        </div>
-        <div className="flex items-center space-x-4">
-          <ThemeToggle />
-          <button onClick={handleLogout} className="text-red-500 hover:underline">Logout</button>
-        </div>
-      </div>
-    </nav>
+    <AppBar position="sticky" color="default" elevation={1}>
+      <Container maxWidth="lg">
+        <Toolbar disableGutters>
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
+            <RestaurantIcon sx={{ mr: 1, color: 'primary.main' }} />
+            <Typography variant="h6" component="div" sx={{ fontWeight: 600 }}>
+              Meal Calorie Counter
+            </Typography>
+          </Box>
+          
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Button
+              component={Link}
+              href="/dashboard"
+              color="primary"
+              variant="text"
+            >
+              Dashboard
+            </Button>
+            <Button
+              component={Link}
+              href="/calories"
+              color="primary"
+              variant="text"
+            >
+              Calories
+            </Button>
+            <ThemeToggle />
+            <Button
+              onClick={handleLogout}
+              color="error"
+              variant="outlined"
+              startIcon={<LogoutIcon />}
+            >
+              Logout
+            </Button>
+          </Box>
+        </Toolbar>
+      </Container>
+    </AppBar>
   );
 } 
