@@ -13,8 +13,9 @@ interface MealState {
   mealHistory: MealHistoryItem[];
   searchCalories: (query: string, servings: number) => Promise<void>;
   addToHistory: (meal: MealHistoryItem) => void;
-  clearHistory: () => void;
+  clearHistory: () => Promise<void>;
   saveMealToDb: (meal: MealHistoryItem) => Promise<void>;
+  fetchMealsFromDb: () => Promise<void>;
 }
 
 export const useMealStore = create<MealState>()(
@@ -84,8 +85,29 @@ export const useMealStore = create<MealState>()(
           mealHistory: [meal, ...state.mealHistory],
         }));
       },
-      clearHistory: () => {
-        set({ mealHistory: [] });
+      clearHistory: async () => {
+        try {
+          // Get token from store or cookie
+          const authStore = useAuthStore.getState();
+          const token = authStore.token || Cookies.get('auth-token');
+          
+          // If user is authenticated, clear history from DB first
+          if (token) {
+            await axios.delete('/api/meals/clear', {
+              headers: {
+                Authorization: `Bearer ${token}`
+              }
+            });
+            console.log('Meal history cleared from database');
+          }
+          
+          // Clear local history
+          set({ mealHistory: [] });
+        } catch (error) {
+          console.error('Error clearing meal history:', error);
+          // Still clear local history even if DB clear fails
+          set({ mealHistory: [] });
+        }
       },
       saveMealToDb: async (meal: MealHistoryItem) => {
         try {
@@ -113,6 +135,41 @@ export const useMealStore = create<MealState>()(
           console.log('Meal saved to database successfully');
         } catch (error) {
           console.error('Error saving meal to database:', error);
+        }
+      },
+      fetchMealsFromDb: async () => {
+        try {
+          // Get token from store or cookie
+          const authStore = useAuthStore.getState();
+          const token = authStore.token || Cookies.get('auth-token');
+          
+          if (!token) {
+            console.log('No authentication token found, skipping meal fetch');
+            return;
+          }
+          
+          const response = await axios.get('/api/meals', {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          
+          if (response.data && response.data.meals) {
+            // Convert database meals to MealHistoryItem format
+            const meals: MealHistoryItem[] = response.data.meals.map((meal: any) => ({
+              dishName: meal.dishName,
+              servings: meal.servings,
+              caloriesPerServing: meal.caloriesPerServing,
+              totalCalories: meal.totalCalories,
+              timestamp: meal.createdAt,
+            }));
+            
+            // Update store with fetched meals
+            set({ mealHistory: meals });
+            console.log('Meals fetched from database successfully', meals);
+          }
+        } catch (error) {
+          console.error('Error fetching meals from database:', error);
         }
       }
     }),

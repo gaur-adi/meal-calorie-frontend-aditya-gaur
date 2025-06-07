@@ -7,13 +7,16 @@ import MealForm from '@/components/MealForm';
 import ResultCard from '@/components/ResultCard';
 import MealHistory from '@/components/MealHistory';
 import { useAuthStore } from '@/stores/authStore';
+import { useMealStore } from '@/stores/mealStore';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 
 export default function Dashboard() {
   const { isAuthenticated, token } = useAuthStore();
+  const { fetchMealsFromDb } = useMealStore();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
+  const [authChecked, setAuthChecked] = useState(false);
 
   // Add useEffect to handle client-side rendering
   useEffect(() => {
@@ -37,26 +40,20 @@ export default function Dashboard() {
   useEffect(() => {
     if (!isAuthenticated && !Cookies.get('auth-token')) {
       router.push('/login');
+    } else {
+      setAuthChecked(true);
     }
   }, [isAuthenticated, router]);
 
-  // If not authenticated, show loading
-  if (!isAuthenticated && !Cookies.get('auth-token')) {
-    return (
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        bgcolor: '#f8fafc'
-      }}>
-        <Typography>Checking authentication...</Typography>
-      </Box>
-    );
-  }
+  // Fetch meals from the database when authenticated
+  useEffect(() => {
+    if (isAuthenticated || Cookies.get('auth-token')) {
+      fetchMealsFromDb();
+    }
+  }, [isAuthenticated, fetchMealsFromDb]);
 
-  // Show a simple loading state during hydration
-  if (!isClient) {
+  // Show loading state when checking auth or during hydration
+  if (!isClient || (!authChecked && !isAuthenticated && !Cookies.get('auth-token'))) {
     return (
       <Box sx={{ 
         display: 'flex', 

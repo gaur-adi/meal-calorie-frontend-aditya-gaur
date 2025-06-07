@@ -86,9 +86,12 @@ export async function GET(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     // Verify authentication
-    const user = await protectRoute(request);
-    if (user instanceof NextResponse) {
-      return user; // Return error response if authentication failed
+    const user = await isAuthenticated(request);
+    if (!user) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
     const { searchParams } = new URL(request.url);
