@@ -137,4 +137,6 @@ export function MealForm() {
       </Button>
     </Box>
   );
-} 
+}
+
+export default MealForm; 

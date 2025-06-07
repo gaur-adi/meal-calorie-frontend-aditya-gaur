@@ -1,87 +1,78 @@
 import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
 import axios from "axios";
 
-const USDA_API_KEY = process.env.USDA_API_KEY || process.env.NEXT_PUBLIC_USDA_API_KEY;
+const USDA_API_KEY = process.env.USDA_API_KEY || "DEMO_KEY";
+const USDA_SEARCH_URL = "https://api.nal.usda.gov/fdc/v1/foods/search";
 
-export async function POST(request: NextRequest) {
+interface Nutrient {
+  nutrientName?: string;
+  nutrientId?: number;
+  value: number;
+}
+
+export async function POST(request: Request) {
   try {
-    // No authentication check required
-    console.log("Processing calories request");
+    // Get food query from request
+    const { dishName, servings = 1 } = await request.json();
     
-    const { dishName, servings } = await request.json();
-
     if (!dishName) {
       return NextResponse.json(
-        { error: "Dish name is required" },
+        { message: "Dish name is required" },
         { status: 400 }
       );
     }
 
-    // Search for the food item using the USDA API
-    console.log(`Searching for "${dishName}" using USDA API key: ${USDA_API_KEY ? "Present" : "Missing"}`);
-    
-    const response = await axios.get(`https://api.nal.usda.gov/fdc/v1/foods/search`, {
+    // Make request to USDA API
+    const response = await axios.get(USDA_SEARCH_URL, {
       params: {
-        query: dishName,
         api_key: USDA_API_KEY,
+        query: dishName,
         pageSize: 1,
-      },
-    });
-
-    console.log('USDA API response:', response.data);
-
-    if (!response.data.foods || response.data.foods.length === 0) {
-      return NextResponse.json(
-        { error: "No food items found" },
-        { status: 404 }
-      );
-    }
-
-    const food = response.data.foods[0];
-    
-    // Get the energy nutrient (calories)
-    const energyNutrient = food.foodNutrients?.find(
-      (n: any) => n.nutrientName?.toLowerCase().includes('energy')
-    );
-
-    if (!energyNutrient) {
-      return NextResponse.json(
-        { error: "Calorie information not available for this food item" },
-        { status: 404 }
-      );
-    }
-
-    const servingSize = food.servingSize || 100;
-    const caloriesPerServing = Math.round((energyNutrient.value * servingSize) / 100);
-    const totalCalories = caloriesPerServing * (servings || 1);
-
-    // Return the calorie information
-    return NextResponse.json({
-      dish_name: dishName,
-      servings: servings || 1,
-      calories_per_serving: caloriesPerServing,
-      total_calories: totalCalories,
-      source: "USDA Food Database",
-      foodDetails: {
-        fdcId: food.fdcId,
-        description: food.description,
-        brandName: food.brandName,
+        dataType: "Foundation,SR Legacy"
       }
     });
 
-  } catch (error: any) {
-    console.error("Error:", error);
+    const data = response.data;
     
-    if (error.response?.status === 401) {
+    // Check if foods were found
+    if (!data.foods || data.foods.length === 0) {
       return NextResponse.json(
-        { error: "Invalid API key or unauthorized" },
-        { status: 401 }
+        { message: "No nutritional data found for this dish" },
+        { status: 404 }
       );
     }
+
+    const food = data.foods[0];
     
+    // Find calories nutrient (energy)
+    const caloriesNutrient = food.foodNutrients.find(
+      (nutrient: Nutrient) => 
+        nutrient.nutrientName === "Energy" || 
+        nutrient.nutrientName?.includes("Energy") ||
+        nutrient.nutrientId === 1008
+    );
+
+    if (!caloriesNutrient) {
+      return NextResponse.json(
+        { message: "No calorie data found for this dish" },
+        { status: 404 }
+      );
+    }
+
+    const caloriesPerServing = caloriesNutrient.value;
+    const totalCalories = caloriesPerServing * servings;
+
+    return NextResponse.json({
+      calories_per_serving: caloriesPerServing,
+      total_calories: totalCalories,
+      servings: servings,
+      dish_name: dishName,
+      source: "USDA Food Database"
+    });
+  } catch (error) {
+    console.error("Calories API error:", error);
     return NextResponse.json(
-      { error: "Failed to process request" },
+      { message: "Failed to fetch calorie data" },
       { status: 500 }
     );
   }

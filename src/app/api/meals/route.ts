@@ -1,31 +1,83 @@
 import { NextResponse } from "next/server";
-import { protectRoute } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import type { NextRequest } from "next/server";
+import prisma from "@/lib/prismadb";
+import { isAuthenticated } from "@/lib/auth";
 
-export async function GET(request: NextRequest) {
+// POST: Create a new meal
+export async function POST(request: NextRequest) {
   try {
-    // Verify authentication
-    const user = await protectRoute(request);
-    if (user instanceof NextResponse) {
-      return user; // Return error response if authentication failed
+    // Check authentication
+    const user = await isAuthenticated(request);
+    if (!user) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
     }
 
-    // Get meals for the authenticated user
+    // Parse request body
+    const { dishName, servings, caloriesPerServing, totalCalories, source } = await request.json();
+
+    // Validate input
+    if (!dishName || !servings || !caloriesPerServing || !totalCalories) {
+      return NextResponse.json(
+        { message: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // Create meal in database
+    const meal = await prisma.meal.create({
+      data: {
+        dishName,
+        servings,
+        caloriesPerServing,
+        totalCalories,
+        source: source || "USDA Food Database",
+        userId: user.id,
+      },
+    });
+
+    return NextResponse.json({
+      message: "Meal saved successfully",
+      meal,
+    });
+  } catch (error) {
+    console.error("Failed to save meal:", error);
+    return NextResponse.json(
+      { message: "Failed to save meal" },
+      { status: 500 }
+    );
+  }
+}
+
+// GET: Get all meals for the current user
+export async function GET(request: NextRequest) {
+  try {
+    // Check authentication
+    const user = await isAuthenticated(request);
+    if (!user) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    // Fetch all meals for the user
     const meals = await prisma.meal.findMany({
       where: {
         userId: user.id,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
-    return NextResponse.json(meals);
+    return NextResponse.json({ meals });
   } catch (error) {
-    console.error("Error fetching meals:", error);
+    console.error("Failed to fetch meals:", error);
     return NextResponse.json(
-      { error: "Failed to fetch meals" },
+      { message: "Failed to fetch meals" },
       { status: 500 }
     );
   }

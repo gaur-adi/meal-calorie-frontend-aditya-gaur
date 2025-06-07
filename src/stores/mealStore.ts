@@ -2,7 +2,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { searchUSDAFood } from '@/lib/api';
 import { MealResponse, MealHistoryItem } from '@/types/meal';
+import { useAuthStore } from '@/stores/authStore';
 import axios from 'axios';
+import Cookies from 'js-cookie';
 
 interface Nutrient {
   nutrientName?: string;
@@ -17,6 +19,7 @@ interface MealState {
   searchCalories: (query: string, servings: number) => Promise<void>;
   addToHistory: (meal: MealHistoryItem) => void;
   clearHistory: () => void;
+  saveMealToDb: (meal: MealHistoryItem) => Promise<void>;
 }
 
 export const useMealStore = create<MealState>()(
@@ -31,12 +34,20 @@ export const useMealStore = create<MealState>()(
           set({ loading: true, error: null });
           console.log('Starting calorie search for:', query);
 
+          // Set authorization header from store or cookie
+          const authStore = useAuthStore.getState();
+          const token = authStore.token || Cookies.get('auth-token');
+          
+          const headers: any = {};
+          if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+          }
+
           // Make API call to your backend calories endpoint which handles FDA API call
-          // This will use the session token cookie automatically
           const response = await axios.post('/api/calories', {
             dishName: query,
             servings: servings
-          });
+          }, { headers });
           
           console.log('Calorie API response:', response.data);
           
@@ -58,6 +69,12 @@ export const useMealStore = create<MealState>()(
 
           set({ result, loading: false });
           get().addToHistory(mealHistoryItem);
+          
+          // If user is logged in, save the meal to the database
+          const isAuthenticated = authStore.isAuthenticated || !!token;
+          if (isAuthenticated) {
+            await get().saveMealToDb(mealHistoryItem);
+          }
         } catch (error: unknown) {
           console.error('Error in searchCalories:', error);
           set({
@@ -74,6 +91,34 @@ export const useMealStore = create<MealState>()(
       },
       clearHistory: () => {
         set({ mealHistory: [] });
+      },
+      saveMealToDb: async (meal: MealHistoryItem) => {
+        try {
+          // Get token from store or cookie
+          const authStore = useAuthStore.getState();
+          const token = authStore.token || Cookies.get('auth-token');
+          
+          if (!token) {
+            console.log('No authentication token found, skipping meal save');
+            return;
+          }
+          
+          await axios.post('/api/meals', {
+            dishName: meal.dishName,
+            servings: meal.servings,
+            caloriesPerServing: meal.caloriesPerServing,
+            totalCalories: meal.totalCalories,
+            source: 'USDA Food Database'
+          }, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          
+          console.log('Meal saved to database successfully');
+        } catch (error) {
+          console.error('Error saving meal to database:', error);
+        }
       }
     }),
     {

@@ -1,37 +1,99 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import axios from 'axios';
 
-interface User {
+type User = {
   id: string;
   email: string;
   firstName: string;
   lastName: string;
-}
-
-interface AuthState {
-  user: User | null;
-  isAuthenticated: boolean;
-  login: () => Promise<boolean>;
-  logout: () => void;
-}
-
-// Mock user data
-const mockUser: User = {
-  id: "mock-user-id",
-  email: "user@example.com",
-  firstName: "Demo",
-  lastName: "User"
 };
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: mockUser, // Always authenticated for demo
-  isAuthenticated: true, // Always authenticated for demo
+type AuthState = {
+  token: string | null;
+  user: User | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<any>;
+  register: (firstName: string, lastName: string, email: string, password: string) => Promise<any>;
+  logout: () => void;
+  checkAuth: () => boolean;
+};
 
-  login: async () => {
-    set({ user: mockUser, isAuthenticated: true });
-    return true;
-  },
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set, get) => ({
+      token: null,
+      user: null,
+      isAuthenticated: false,
+      isLoading: false,
+      error: null,
 
-  logout: () => {
-    set({ user: mockUser, isAuthenticated: true }); // Still keep authenticated for demo
-  }
-})); 
+      login: async (email: string, password: string) => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          const response = await axios.post('/api/auth/login', { email, password });
+          
+          set({ 
+            token: response.data.token, 
+            user: response.data.user, 
+            isAuthenticated: true, 
+            isLoading: false 
+          });
+
+          return response.data;
+        } catch (error: any) {
+          set({ 
+            isLoading: false, 
+            error: error?.response?.data?.message || 'Login failed. Please try again.' 
+          });
+          throw error;
+        }
+      },
+
+      register: async (firstName: string, lastName: string, email: string, password: string) => {
+        try {
+          set({ isLoading: true, error: null });
+          
+          const response = await axios.post('/api/auth/register', { 
+            firstName, 
+            lastName, 
+            email, 
+            password 
+          });
+          
+          set({
+            token: response.data.token,
+            user: response.data.user,
+            isAuthenticated: true,
+            isLoading: false
+          });
+
+          return response.data;
+        } catch (error: any) {
+          set({
+            isLoading: false,
+            error: error?.response?.data?.message || 'Registration failed. Please try again.'
+          });
+          throw error;
+        }
+      },
+
+      logout: () => {
+        // Clear the auth-token cookie
+        document.cookie = "auth-token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        set({ token: null, user: null, isAuthenticated: false });
+      },
+
+      checkAuth: () => {
+        const state = get();
+        return !!state.token && !!state.user;
+      },
+    }),
+    {
+      name: 'auth-storage',
+    }
+  )
+); 

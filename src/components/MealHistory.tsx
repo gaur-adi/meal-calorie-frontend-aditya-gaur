@@ -5,14 +5,12 @@ import {
   Card,
   Typography,
   Box,
-  Button,
   IconButton,
   Tooltip
 } from "@mui/material";
 import HistoryIcon from "@mui/icons-material/History";
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { MealHistoryItem } from "@/types/meal";
 
 export function MealHistory() {
   const { mealHistory = [], clearHistory } = useMealStore();
@@ -196,4 +194,6 @@ export function MealHistory() {
       </Box>
     </Card>
   );
-} 
+}
+
+export default MealHistory; 

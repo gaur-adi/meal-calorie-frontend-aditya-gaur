@@ -5,13 +5,42 @@ import { MealResultType } from "@/types/meal";
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import PeopleIcon from '@mui/icons-material/People';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';
+import { useMealStore } from "@/stores/mealStore";
 
-interface ResultCardProps {
-  result: MealResultType;
-}
+export default function ResultCard() {
+  const { result } = useMealStore();
+  
+  // If no result, show empty state
+  if (!result) {
+    return (
+      <Card
+        sx={{
+          borderRadius: '16px',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.06)',
+          overflow: 'visible',
+          p: 3,
+          pt: 4,
+          position: 'relative',
+          background: '#fff',
+          height: '100%',
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Typography color="text.secondary" textAlign="center">
+          Calculate a meal to see results
+        </Typography>
+      </Card>
+    );
+  }
 
-export function ResultCard({ result }: ResultCardProps) {
-  const { dishName, servings, caloriesPerServing, totalCalories } = result;
+  // Extract data from result
+  const dishName = result?.dish_name || "";
+  const servings = result?.servings || 0;
+  const caloriesPerServing = result?.calories_per_serving || 0;
+  const totalCalories = result?.total_calories || 0;
   
   return (
     <Card

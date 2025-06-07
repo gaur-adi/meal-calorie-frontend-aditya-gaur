@@ -1,11 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { rateLimit } from '@/lib/rateLimit';
 import { NextRequest } from 'next/server';
-
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
+import { comparePassword, generateToken } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   // Rate limit: 10 login attempts per 15 minutes
@@ -25,80 +22,52 @@ export async function POST(req: NextRequest) {
     // Validate input
     if (!email || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { message: "Email and password are required" },
         { status: 400 }
       );
     }
 
-    // Find user with auth data
+    // Find user by email
     const user = await prisma.user.findUnique({
       where: { email },
-      include: { auth: true }
+      include: { auth: true },
     });
 
+    // If user not found or no auth record
     if (!user || !user.auth) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { message: "Invalid credentials" },
         { status: 401 }
       );
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.auth.password);
-
+    const isPasswordValid = await comparePassword(password, user.auth.password);
     if (!isPasswordValid) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
+        { message: "Invalid credentials" },
         { status: 401 }
       );
     }
 
-    // Generate new session token
-    const sessionToken = jwt.sign(
-      { userId: user.id, email: user.email },
-      JWT_SECRET,
-      { expiresIn: '15d' }
-    );
+    // Generate JWT token
+    const token = await generateToken(user.id);
 
-    // Calculate token expiry (15 days from now)
-    const tokenExpiry = new Date();
-    tokenExpiry.setDate(tokenExpiry.getDate() + 15);
-
-    // Update auth record with new session token
-    await prisma.auth.update({
-      where: { userId: user.id },
-      data: {
-        sessionToken,
-        tokenExpiry,
-      },
-    });
-
-    // Create response with session token cookie
-    const response = NextResponse.json({
+    // Return user data and token
+    return NextResponse.json({
+      message: "Login successful",
       user: {
         id: user.id,
-        email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-      }
+        email: user.email,
+      },
+      token,
     });
-
-    // Set cookie with proper configuration
-    response.cookies.set({
-      name: 'session-token',
-      value: sessionToken,
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      expires: tokenExpiry,
-      path: '/'
-    });
-
-    return response;
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { message: "Login failed" },
       { status: 500 }
     );
   }

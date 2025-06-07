@@ -1,54 +1,93 @@
-import { RateLimiter } from 'limiter';
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-// Store for rate limiters
-const limiters = new Map<string, RateLimiter>();
-
-interface RateLimitConfig {
-  tokensPerInterval: number;
-  interval: number; // in milliseconds
-  identifier: string;
+// Simple in-memory rate limiter
+interface RateLimitStore {
+  [key: string]: {
+    count: number;
+    resetTime: number;
+  };
 }
 
+// Simple in-memory store - this will reset on server restart
+// In production, use a proper rate limiting solution like Redis or a database
+const rateLimitStore: RateLimitStore = {};
+
+// Rate limit configuration
+interface RateLimitConfig {
+  tokensPerInterval: number; // Number of allowed requests per interval
+  interval: number; // Interval in milliseconds
+  identifier: string; // Unique identifier for the limit type (e.g., 'login', 'register')
+}
+
+// Default rate limit settings: 10 requests per minute
+const DEFAULT_RATE_LIMIT: RateLimitConfig = {
+  tokensPerInterval: 10,
+  interval: 60 * 1000, // 1 minute
+  identifier: 'default',
+};
+
+export interface RateLimitResult {
+  isLimited: boolean;
+  remainingTokens: number;
+  msBeforeNext: number;
+}
+
+/**
+ * Simple rate limiting function suitable for Edge Runtime
+ */
 export async function rateLimit(
   req: NextRequest,
-  config: RateLimitConfig
-): Promise<{ success: boolean; response?: NextResponse }> {
-  const { tokensPerInterval, interval, identifier } = config;
+  config?: Partial<RateLimitConfig>
+): Promise<RateLimitResult> {
+  // Merge default config with provided config
+  const { tokensPerInterval, interval, identifier } = {
+    ...DEFAULT_RATE_LIMIT,
+    ...config,
+  };
+
+  // Get client IP or fallback to a default
+  const ip = req.ip || req.headers.get('x-forwarded-for') || 'anonymous';
   
-  // Get IP address
-  const ip = req.ip || 'anonymous';
-  const key = `${identifier}-${ip}`;
-
-  // Get or create limiter for this IP
-  if (!limiters.has(key)) {
-    limiters.set(
-      key,
-      new RateLimiter({
-        tokensPerInterval,
-        interval,
-      })
-    );
-  }
-
-  const limiter = limiters.get(key)!;
-  const hasToken = await limiter.tryRemoveTokens(1);
-
-  if (!hasToken) {
-    return {
-      success: false,
-      response: NextResponse.json(
-        { error: 'Too many requests. Please try again later.' },
-        { 
-          status: 429,
-          headers: {
-            'Retry-After': Math.ceil(interval / 1000).toString(),
-          }
-        }
-      ),
+  // Create a key combining the identifier and IP
+  const key = `${identifier}:${ip}`;
+  
+  const now = Date.now();
+  
+  // Initialize or get existing entry
+  if (!rateLimitStore[key]) {
+    rateLimitStore[key] = {
+      count: tokensPerInterval,
+      resetTime: now + interval,
     };
   }
-
-  return { success: true };
+  
+  // Reset if interval has passed
+  if (now > rateLimitStore[key].resetTime) {
+    rateLimitStore[key] = {
+      count: tokensPerInterval,
+      resetTime: now + interval,
+    };
+  }
+  
+  // Check remaining tokens
+  const remainingTokens = Math.max(0, rateLimitStore[key].count);
+  const msBeforeNext = Math.max(0, rateLimitStore[key].resetTime - now);
+  
+  // If we have tokens, decrement and allow
+  if (remainingTokens > 0) {
+    rateLimitStore[key].count--;
+    
+    return {
+      isLimited: false,
+      remainingTokens: rateLimitStore[key].count,
+      msBeforeNext,
+    };
+  }
+  
+  // No tokens left, rate limit
+  return {
+    isLimited: true,
+    remainingTokens: 0,
+    msBeforeNext,
+  };
 } 
