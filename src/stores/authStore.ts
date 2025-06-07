@@ -6,6 +6,10 @@ interface User {
   name: string;
 }
 
+interface StoredUser extends User {
+  password: string;
+}
+
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
@@ -20,9 +24,8 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       isAuthenticated: false,
       login: (email: string, password: string) => {
-        // Get users from localStorage
-        const users = JSON.parse(localStorage.getItem("users") || "[]");
-        const user = users.find((u: any) => u.email === email && u.password === password);
+        const users = JSON.parse(localStorage.getItem("users") || "[]") as StoredUser[];
+        const user = users.find((u) => u.email === email && u.password === password);
         
         if (user) {
           set({ user: { email: user.email, name: user.name }, isAuthenticated: true });
@@ -31,19 +34,15 @@ export const useAuthStore = create<AuthState>()(
         return false;
       },
       register: (email: string, password: string, name: string) => {
-        // Get existing users
-        const users = JSON.parse(localStorage.getItem("users") || "[]");
+        const users = JSON.parse(localStorage.getItem("users") || "[]") as StoredUser[];
         
-        // Check if user already exists
-        if (users.some((u: any) => u.email === email)) {
+        if (users.some((u) => u.email === email)) {
           return false;
         }
         
-        // Add new user
         users.push({ email, password, name });
         localStorage.setItem("users", JSON.stringify(users));
         
-        // Auto login after registration
         set({ user: { email, name }, isAuthenticated: true });
         return true;
       },

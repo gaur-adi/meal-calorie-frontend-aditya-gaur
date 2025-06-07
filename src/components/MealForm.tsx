@@ -14,18 +14,23 @@ const mealSchema = z.object({
   servings: z.coerce.number().int().positive("Must be > 0"),
 });
 
+interface MealFormValues {
+  dish_name: string;
+  servings: number;
+}
+
 export function MealForm() {
   const { searchCalories, loading, error } = useMealStore();
-  const form = useForm({
+  const form = useForm<MealFormValues>({
     resolver: zodResolver(mealSchema),
     defaultValues: { dish_name: "", servings: 1 },
   });
 
-  const onSubmit = async (values: any) => {
+  const onSubmit = async (values: MealFormValues) => {
     try {
       await searchCalories(values.dish_name);
       toast.success("Calories fetched successfully!");
-    } catch (err) {
+    } catch {
       toast.error("Failed to fetch calories. Please try again.");
     }
   };

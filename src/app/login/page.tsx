@@ -75,7 +75,7 @@ export default function LoginPage() {
 
         <Box className="mt-4 text-center">
           <Typography variant="body2">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/register" className="text-blue-600 hover:text-blue-800">
               Register here
             </Link>

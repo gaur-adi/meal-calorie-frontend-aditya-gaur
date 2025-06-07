@@ -1,13 +1,18 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
 
+interface Nutrient {
+  nutrientId: number;
+  value: number;
+}
+
 const USDA_API_KEY = process.env.USDA_API_KEY;
 const USDA_API_URL = "https://api.nal.usda.gov/fdc/v1";
 
 export async function POST(request: Request) {
   try {
     // Handle CORS
-    const headersList = headers();
+    const headersList = await headers();
     const origin = headersList.get("origin") || "*";
 
     // Handle preflight requests
@@ -81,7 +86,7 @@ export async function POST(request: Request) {
 
     // Calculate calories
     const caloriesPerServing = foodData.foodNutrients.find(
-      (nutrient: any) => nutrient.nutrientId === 1008
+      (nutrient: Nutrient) => nutrient.nutrientId === 1008
     )?.value || 0;
 
     const totalCalories = caloriesPerServing * (servings || 1);

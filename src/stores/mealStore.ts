@@ -1,7 +1,11 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { MealRequest, MealResponse } from '@/types/meal';
 import { searchUSDAFood } from '@/lib/api';
+
+interface Nutrient {
+  nutrientName?: string;
+  value: number;
+}
 
 interface Meal {
   dishName: string;
@@ -37,7 +41,7 @@ export const useMealStore = create<MealState>()(
 
           const food = usdaData.foods[0];
           const energyNutrient = food.foodNutrients?.find(
-            (n: any) => n.nutrientName?.toLowerCase().includes('energy')
+            (n: Nutrient) => n.nutrientName?.toLowerCase().includes('energy')
           );
 
           if (!energyNutrient) {
@@ -55,11 +59,11 @@ export const useMealStore = create<MealState>()(
 
           get().addToHistory(meal);
           set({ loading: false });
-        } catch (error: any) {
+        } catch (error: unknown) {
           console.error('Error in searchCalories:', error);
           set({
             loading: false,
-            error: error.message || 'Failed to fetch calories. Please try again.',
+            error: error instanceof Error ? error.message : 'Failed to fetch calories. Please try again.',
           });
         }
       },

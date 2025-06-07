@@ -31,16 +31,18 @@ export function MealHistory() {
                     </Box>
                   }
                   secondary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
-                      <Box component="span" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
-                        {new Date(meal.timestamp).toLocaleString()}
+                    <Typography component="div">
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                        <Box component="span" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
+                          {new Date(meal.timestamp).toLocaleString()}
+                        </Box>
+                        <Chip
+                          size="small"
+                          label={`${meal.totalCalories} calories`}
+                          variant="outlined"
+                        />
                       </Box>
-                      <Chip
-                        size="small"
-                        label={`${meal.totalCalories} calories`}
-                        variant="outlined"
-                      />
-                    </Box>
+                    </Typography>
                   }
                 />
               </ListItem>
