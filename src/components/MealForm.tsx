@@ -28,7 +28,8 @@ export function MealForm() {
 
   const onSubmit = async (values: MealFormValues) => {
     try {
-      await searchCalories(values.dish_name);
+      console.log('Submitting meal form with values:', values);
+      await searchCalories(values.dish_name, values.servings);
       toast.success("Calories fetched successfully!");
     } catch {
       toast.error("Failed to fetch calories. Please try again.");

@@ -80,15 +80,18 @@ export async function POST(req: NextRequest) {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-      },
-      token: sessionToken,
+      }
     });
 
-    response.cookies.set('session-token', sessionToken, {
+    // Set cookie with proper configuration
+    response.cookies.set({
+      name: 'session-token',
+      value: sessionToken,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       expires: tokenExpiry,
+      path: '/'
     });
 
     return response;

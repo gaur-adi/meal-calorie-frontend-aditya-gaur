@@ -4,25 +4,10 @@ import { useMealStore } from "@/stores/mealStore";
 import { MealForm } from "@/components/MealForm";
 import { ResultCard } from "@/components/ResultCard";
 import { MealHistory } from "@/components/MealHistory";
-import { useAuthStore } from "@/stores/authStore";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 import { Box } from "@mui/material";
 
 export default function DashboardPage() {
   const { result } = useMealStore();
-  const { isAuthenticated } = useAuthStore();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
-    }
-  }, [isAuthenticated, router]);
-
-  if (!isAuthenticated) {
-    return null;
-  }
 
   return (
     <Box
@@ -37,8 +22,11 @@ export default function DashboardPage() {
         pt: 8,
       }}
     >
-        <MealForm />
-        {result && <ResultCard result={result} />}
+      <Box sx={{ mb: 4, textAlign: 'center' }}>
+        <h1>Meal Calorie Dashboard</h1>
+      </Box>
+      <MealForm />
+      {result && <ResultCard result={result} />}
       <Box sx={{ width: "100%", maxWidth: 700 }}>
         <MealHistory />
       </Box>

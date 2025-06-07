@@ -32,8 +32,14 @@ export default function LoginPage() {
     try {
       const success = await login(data.email, data.password);
       if (success) {
+        // Log user data from auth store
+        const user = useAuthStore.getState().user;
+        console.log("Login successful! User data:", user);
+        
         toast.success("Login successful!");
-        router.push("/dashboard");
+        setTimeout(() => {
+          router.replace("/dashboard");
+        }, 100);
       } else {
         toast.error("Invalid credentials");
       }

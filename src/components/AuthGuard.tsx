@@ -9,11 +9,13 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      router.push("/login");
+    // Check if we're on the client side
+    if (typeof window !== 'undefined' && !isAuthenticated) {
+      router.replace("/login");
     }
   }, [isAuthenticated, router]);
 
+  // Show loading or null while checking auth
   if (!isAuthenticated) {
     return null;
   }

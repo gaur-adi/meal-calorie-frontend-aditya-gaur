@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import axios from 'axios';
 
 interface User {
   id: string;
@@ -11,60 +10,28 @@ interface User {
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string, firstName: string, lastName: string) => Promise<boolean>;
-  logout: () => Promise<void>;
+  login: () => Promise<boolean>;
+  logout: () => void;
 }
 
+// Mock user data
+const mockUser: User = {
+  id: "mock-user-id",
+  email: "user@example.com",
+  firstName: "Demo",
+  lastName: "User"
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isAuthenticated: false,
+  user: mockUser, // Always authenticated for demo
+  isAuthenticated: true, // Always authenticated for demo
 
-  login: async (email: string, password: string) => {
-    try {
-      const response = await axios.post('/api/auth/login', {
-        email,
-        password,
-      });
-
-      if (response.data.user) {
-        set({ user: response.data.user, isAuthenticated: true });
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Login error:', error);
-      return false;
-    }
+  login: async () => {
+    set({ user: mockUser, isAuthenticated: true });
+    return true;
   },
 
-  register: async (email: string, password: string, firstName: string, lastName: string) => {
-    try {
-      const response = await axios.post('/api/auth/register', {
-        email,
-        password,
-        firstName,
-        lastName,
-      });
-
-      if (response.data.user) {
-        set({ user: response.data.user, isAuthenticated: true });
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error('Registration error:', error);
-      return false;
-    }
-  },
-
-  logout: async () => {
-    try {
-      // Clear session token cookie
-      await axios.post('/api/auth/logout');
-      set({ user: null, isAuthenticated: false });
-    } catch (error) {
-      console.error('Logout error:', error);
-    }
-  },
+  logout: () => {
+    set({ user: mockUser, isAuthenticated: true }); // Still keep authenticated for demo
+  }
 })); 

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { searchUSDAFood } from '@/lib/api';
 import { MealResponse } from '@/types/meal';
+import axios from 'axios';
 
 interface Nutrient {
   nutrientName?: string;
@@ -19,7 +20,7 @@ interface MealState {
   error: string | null;
   result: MealResponse | null;
   mealHistory: Meal[];
-  searchCalories: (query: string, dishName?: string) => Promise<void>;
+  searchCalories: (query: string, servings: number) => Promise<void>;
   addToHistory: (meal: Meal) => void;
 }
 
@@ -30,41 +31,31 @@ export const useMealStore = create<MealState>()(
       error: null,
       result: null,
       mealHistory: [],
-      searchCalories: async (query: string, dishName?: string) => {
+      searchCalories: async (query: string, servings: number = 1) => {
         try {
           set({ loading: true, error: null });
           console.log('Starting calorie search for:', query);
 
-          const usdaData = await searchUSDAFood(query);
-          console.log('USDA data received:', usdaData);
-
-          if (!usdaData.foods || usdaData.foods.length === 0) {
-            throw new Error('No food items found. Please try a different search term.');
-          }
-
-          const food = usdaData.foods[0];
-          const energyNutrient = food.foodNutrients?.find(
-            (n: Nutrient) => n.nutrientName?.toLowerCase().includes('energy')
-          );
-
-          if (!energyNutrient) {
-            throw new Error('Calorie information not available for this food item.');
-          }
-
-          const servingSize = food.servingSize || 100;
-          const totalCalories = Math.round((energyNutrient.value * servingSize) / 100);
-
+          // Make API call to your backend calories endpoint which handles FDA API call
+          // This will use the session token cookie automatically
+          const response = await axios.post('/api/calories', {
+            dishName: query,
+            servings: servings
+          });
+          
+          console.log('Calorie API response:', response.data);
+          
           const result: MealResponse = {
-            dish_name: dishName || query,
-            servings: 1,
-            calories_per_serving: totalCalories,
-            total_calories: totalCalories,
-            source: 'USDA Food Database'
+            dish_name: query,
+            servings: servings,
+            calories_per_serving: response.data.calories_per_serving,
+            total_calories: response.data.total_calories,
+            source: response.data.source || 'USDA Food Database'
           };
 
           const meal: Meal = {
-            dishName: dishName || query,
-            totalCalories,
+            dishName: query,
+            totalCalories: response.data.total_calories,
             timestamp: new Date().toISOString(),
           };
 
