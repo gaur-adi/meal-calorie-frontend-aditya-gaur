@@ -30,6 +30,8 @@ export interface RateLimitResult {
   isLimited: boolean;
   remainingTokens: number;
   msBeforeNext: number;
+  success: boolean;
+  response?: NextResponse;
 }
 
 /**
@@ -46,7 +48,9 @@ export async function rateLimit(
   };
 
   // Get client IP or fallback to a default
-  const ip = req.ip || req.headers.get('x-forwarded-for') || 'anonymous';
+  const ip = req.headers.get('x-forwarded-for') || 
+             req.headers.get('x-real-ip') || 
+             'anonymous';
   
   // Create a key combining the identifier and IP
   const key = `${identifier}:${ip}`;
@@ -81,6 +85,7 @@ export async function rateLimit(
       isLimited: false,
       remainingTokens: rateLimitStore[key].count,
       msBeforeNext,
+      success: true,
     };
   }
   
@@ -89,5 +94,10 @@ export async function rateLimit(
     isLimited: true,
     remainingTokens: 0,
     msBeforeNext,
+    success: false,
+    response: NextResponse.json(
+      { message: 'Rate limit exceeded. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': Math.ceil(msBeforeNext / 1000).toString() } }
+    ),
   };
 } 

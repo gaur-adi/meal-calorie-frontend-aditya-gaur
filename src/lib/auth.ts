@@ -35,7 +35,7 @@ export async function verifyAuth(req: NextRequest) {
     }
     
     return true;
-  } catch (err) {
+  } catch {
     return false;
   }
 }
@@ -85,8 +85,16 @@ export const getTokenFromRequest = (req: NextRequest): string | null => {
   return authHeader.split(' ')[1];
 };
 
+// Define a proper User type for the return values
+type User = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+} | null;
+
 // Get user from token
-export const getUserFromToken = async (token: string): Promise<any> => {
+export const getUserFromToken = async (token: string): Promise<User> => {
   const payload = await verifyToken(token);
   if (!payload) return null;
 
@@ -104,7 +112,7 @@ export const getUserFromToken = async (token: string): Promise<any> => {
 };
 
 // Check if request is authenticated
-export const isAuthenticated = async (req: NextRequest): Promise<any> => {
+export const isAuthenticated = async (req: NextRequest): Promise<User> => {
   const token = getTokenFromRequest(req);
   if (!token) return null;
   return await getUserFromToken(token);

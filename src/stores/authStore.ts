@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 
 type User = {
   id: string;
@@ -9,14 +9,20 @@ type User = {
   lastName: string;
 };
 
+type AuthResponse = {
+  token: string;
+  user: User;
+  [key: string]: string | number | boolean | User | null | undefined;
+};
+
 type AuthState = {
   token: string | null;
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<any>;
-  register: (firstName: string, lastName: string, email: string, password: string) => Promise<any>;
+  login: (email: string, password: string) => Promise<AuthResponse>;
+  register: (firstName: string, lastName: string, email: string, password: string) => Promise<AuthResponse>;
   logout: () => void;
   checkAuth: () => boolean;
 };
@@ -34,7 +40,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true, error: null });
           
-          const response = await axios.post('/api/auth/login', { email, password });
+          const response = await axios.post<AuthResponse>('/api/auth/login', { email, password });
           
           set({ 
             token: response.data.token, 
@@ -44,10 +50,10 @@ export const useAuthStore = create<AuthState>()(
           });
 
           return response.data;
-        } catch (error: any) {
+        } catch (error: unknown) {
           set({ 
             isLoading: false, 
-            error: error?.response?.data?.message || 'Login failed. Please try again.' 
+            error: error instanceof Error ? error.message : 'Login failed. Please try again.' 
           });
           throw error;
         }
@@ -57,7 +63,7 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true, error: null });
           
-          const response = await axios.post('/api/auth/register', { 
+          const response = await axios.post<AuthResponse>('/api/auth/register', { 
             firstName, 
             lastName, 
             email, 
@@ -72,10 +78,15 @@ export const useAuthStore = create<AuthState>()(
           });
 
           return response.data;
-        } catch (error: any) {
+        } catch (error: unknown) {
+          const errorMessage = 
+            error instanceof AxiosError 
+              ? error.response?.data?.message || 'Registration failed. Please try again.'
+              : 'Registration failed. Please try again.';
+              
           set({
             isLoading: false,
-            error: error?.response?.data?.message || 'Registration failed. Please try again.'
+            error: errorMessage
           });
           throw error;
         }

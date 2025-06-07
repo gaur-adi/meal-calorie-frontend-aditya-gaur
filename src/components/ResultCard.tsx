@@ -1,7 +1,6 @@
 "use client";
 
 import { Card, Typography, Box, Stack } from '@mui/material';
-import { MealResultType } from "@/types/meal";
 import RestaurantIcon from '@mui/icons-material/Restaurant';
 import PeopleIcon from '@mui/icons-material/People';
 import LocalFireDepartmentIcon from '@mui/icons-material/LocalFireDepartment';

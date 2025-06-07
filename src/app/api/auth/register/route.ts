@@ -3,6 +3,7 @@ import { rateLimit } from '@/lib/rateLimit';
 import { NextRequest } from 'next/server';
 import { hashPassword, generateToken } from "@/lib/auth";
 import prisma from "@/lib/prismadb";
+import { PrismaClient } from '@prisma/client';
 
 export async function POST(req: NextRequest) {
   // Rate limiting
@@ -42,7 +43,7 @@ export async function POST(req: NextRequest) {
     const hashedPassword = await hashPassword(password);
 
     // Create user and auth record in a transaction
-    const user = await prisma.$transaction(async (tx) => {
+    const user = await prisma.$transaction(async (tx: PrismaClient) => {
       // Create user
       const newUser = await tx.user.create({
         data: {

@@ -1,15 +1,10 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { searchUSDAFood } from '@/lib/api';
 import { MealResponse, MealHistoryItem } from '@/types/meal';
 import { useAuthStore } from '@/stores/authStore';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-interface Nutrient {
-  nutrientName?: string;
-  value: number;
-}
 
 interface MealState {
   loading: boolean;
@@ -38,7 +33,7 @@ export const useMealStore = create<MealState>()(
           const authStore = useAuthStore.getState();
           const token = authStore.token || Cookies.get('auth-token');
           
-          const headers: any = {};
+          const headers: Record<string, string> = {};
           if (token) {
             headers['Authorization'] = `Bearer ${token}`;
           }
