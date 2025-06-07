@@ -1,70 +1,36 @@
 "use client";
 
-import { ThemeProvider as MUIThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { ThemeProvider } from "next-themes";
-import { Navbar } from "@/components/Navbar";
-import { Toast } from "@/components/Toast";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { Navbar } from "@/components/Navbar";
+import { Toaster } from "react-hot-toast";
+import { usePathname } from 'next/navigation';
+import { useAuthStore } from "@/stores/authStore";
 
-const theme = createTheme({
-  palette: {
-    primary: {
-      main: '#2196f3',
-    },
-    secondary: {
-      main: '#f50057',
-    },
-    background: {
-      default: '#f5f5f5',
-    },
-  },
-  typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
-    h1: {
-      fontSize: '2.5rem',
-      fontWeight: 600,
-    },
-    h2: {
-      fontSize: '2rem',
-      fontWeight: 600,
-    },
-  },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 8,
-          textTransform: 'none',
-          fontWeight: 600,
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
-        },
-      },
-    },
-  },
-});
+const inter = Inter({ subsets: ["latin"] });
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const pathname = usePathname();
+  const { isAuthenticated } = useAuthStore();
+  
+  // List of public routes that don't require authentication
+  const publicRoutes = ['/', '/login', '/register'];
+  const isPublicRoute = publicRoutes.includes(pathname);
+
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body suppressHydrationWarning>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <MUIThemeProvider theme={theme}>
-            <CssBaseline />
-            <Navbar />
-            <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
-              {children}
-            </main>
-            <Toast />
-          </MUIThemeProvider>
-        </ThemeProvider>
+    <html lang="en">
+      <body className={inter.className}>
+        {(isAuthenticated || isPublicRoute) && (
+          <>
+            {isAuthenticated && <Navbar />}
+            {children}
+            <Toaster position="bottom-right" />
+          </>
+        )}
       </body>
     </html>
   );

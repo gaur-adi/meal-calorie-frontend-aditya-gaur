@@ -7,6 +7,7 @@ import { MealHistory } from "@/components/MealHistory";
 import { useAuthStore } from "@/stores/authStore";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import { Box } from "@mui/material";
 
 export default function DashboardPage() {
   const { result } = useMealStore();
@@ -24,13 +25,23 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="flex flex-col min-h-screen items-center justify-start pt-12">
-      <h1 className="text-3xl font-bold mb-2">Meal Calorie Count Generator</h1>
-      <div className="w-full max-w-4xl p-4">
+    <Box
+      sx={{
+        minHeight: "100vh",
+        width: "100%",
+        background: "linear-gradient(135deg, #e0e7ff 0%, #f0fdfa 100%)",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        pt: 8,
+      }}
+    >
         <MealForm />
         {result && <ResultCard result={result} />}
+      <Box sx={{ width: "100%", maxWidth: 700 }}>
         <MealHistory />
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 } 

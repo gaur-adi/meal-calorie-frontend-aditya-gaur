@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { searchUSDAFood } from '@/lib/api';
+import { MealResponse } from '@/types/meal';
 
 interface Nutrient {
   nutrientName?: string;
@@ -16,6 +17,7 @@ interface Meal {
 interface MealState {
   loading: boolean;
   error: string | null;
+  result: MealResponse | null;
   mealHistory: Meal[];
   searchCalories: (query: string, dishName?: string) => Promise<void>;
   addToHistory: (meal: Meal) => void;
@@ -26,6 +28,7 @@ export const useMealStore = create<MealState>()(
     (set, get) => ({
       loading: false,
       error: null,
+      result: null,
       mealHistory: [],
       searchCalories: async (query: string, dishName?: string) => {
         try {
@@ -51,19 +54,28 @@ export const useMealStore = create<MealState>()(
           const servingSize = food.servingSize || 100;
           const totalCalories = Math.round((energyNutrient.value * servingSize) / 100);
 
+          const result: MealResponse = {
+            dish_name: dishName || query,
+            servings: 1,
+            calories_per_serving: totalCalories,
+            total_calories: totalCalories,
+            source: 'USDA Food Database'
+          };
+
           const meal: Meal = {
             dishName: dishName || query,
             totalCalories,
             timestamp: new Date().toISOString(),
           };
 
+          set({ result, loading: false });
           get().addToHistory(meal);
-          set({ loading: false });
         } catch (error: unknown) {
           console.error('Error in searchCalories:', error);
           set({
             loading: false,
             error: error instanceof Error ? error.message : 'Failed to fetch calories. Please try again.',
+            result: null
           });
         }
       },
