@@ -5,12 +5,32 @@ import {
   Card,
   Typography,
   Box,
+  Button,
+  IconButton,
+  Tooltip
 } from "@mui/material";
 import HistoryIcon from "@mui/icons-material/History";
 import RestaurantIcon from '@mui/icons-material/Restaurant';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { MealHistoryItem } from "@/types/meal";
 
 export function MealHistory() {
-  const { mealHistory = [] } = useMealStore();
+  const { mealHistory = [], clearHistory } = useMealStore();
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    return new Date(dateString).toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
 
   return (
     <Card
@@ -30,24 +50,45 @@ export function MealHistory() {
         bgcolor: '#4361ee',
         display: 'flex', 
         alignItems: 'center',
+        justifyContent: 'space-between'
       }}>
-        <Box
-          sx={{
-            width: 36,
-            height: 36,
-            borderRadius: '50%',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: 'rgba(255, 255, 255, 0.2)',
-            mr: 2,
-          }}
-        >
-          <HistoryIcon sx={{ color: 'white' }} />
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box
+            sx={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: 'rgba(255, 255, 255, 0.2)',
+              mr: 2,
+            }}
+          >
+            <HistoryIcon sx={{ color: 'white' }} />
+          </Box>
+          <Typography variant="h6" sx={{ fontWeight: 500, color: 'white' }}>
+            Meal History
+          </Typography>
         </Box>
-        <Typography variant="h6" sx={{ fontWeight: 500, color: 'white' }}>
-          Meal History
-        </Typography>
+        
+        {mealHistory.length > 0 && (
+          <Tooltip title="Clear history">
+            <IconButton 
+              size="small" 
+              onClick={clearHistory}
+              sx={{ 
+                color: 'white',
+                bgcolor: 'rgba(255, 255, 255, 0.1)',
+                '&:hover': {
+                  bgcolor: 'rgba(255, 255, 255, 0.2)',
+                }
+              }}
+            >
+              <DeleteIcon fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
       
       {/* Scrollable white content area */}
@@ -137,17 +178,15 @@ export function MealHistory() {
                       </Box>
                     </Box>
                     
-                    <Typography 
-                      variant="caption" 
-                      color="text.secondary"
-                      sx={{ fontSize: '0.75rem', display: 'block' }}
-                    >
-                      {new Date(meal.timestamp).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
-                    </Typography>
+                    <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+                      <Typography 
+                        variant="caption" 
+                        color="text.secondary"
+                        sx={{ fontSize: '0.75rem', display: 'block', mt: 0.5 }}
+                      >
+                        {formatDate(meal.timestamp)}, {formatTime(meal.timestamp)}
+                      </Typography>
+                    </Box>
                   </Box>
                 </Box>
               </Box>

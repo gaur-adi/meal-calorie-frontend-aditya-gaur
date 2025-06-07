@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { searchUSDAFood } from '@/lib/api';
-import { MealResponse } from '@/types/meal';
+import { MealResponse, MealHistoryItem } from '@/types/meal';
 import axios from 'axios';
 
 interface Nutrient {
@@ -9,19 +9,14 @@ interface Nutrient {
   value: number;
 }
 
-interface Meal {
-  dishName: string;
-  totalCalories: number;
-  timestamp: string;
-}
-
 interface MealState {
   loading: boolean;
   error: string | null;
   result: MealResponse | null;
-  mealHistory: Meal[];
+  mealHistory: MealHistoryItem[];
   searchCalories: (query: string, servings: number) => Promise<void>;
-  addToHistory: (meal: Meal) => void;
+  addToHistory: (meal: MealHistoryItem) => void;
+  clearHistory: () => void;
 }
 
 export const useMealStore = create<MealState>()(
@@ -53,14 +48,16 @@ export const useMealStore = create<MealState>()(
             source: response.data.source || 'USDA Food Database'
           };
 
-          const meal: Meal = {
+          const mealHistoryItem: MealHistoryItem = {
             dishName: query,
+            servings: servings,
+            caloriesPerServing: response.data.calories_per_serving,
             totalCalories: response.data.total_calories,
             timestamp: new Date().toISOString(),
           };
 
           set({ result, loading: false });
-          get().addToHistory(meal);
+          get().addToHistory(mealHistoryItem);
         } catch (error: unknown) {
           console.error('Error in searchCalories:', error);
           set({
@@ -70,11 +67,14 @@ export const useMealStore = create<MealState>()(
           });
         }
       },
-      addToHistory: (meal: Meal) => {
+      addToHistory: (meal: MealHistoryItem) => {
         set((state) => ({
           mealHistory: [meal, ...state.mealHistory],
         }));
       },
+      clearHistory: () => {
+        set({ mealHistory: [] });
+      }
     }),
     {
       name: 'meal-storage',

@@ -24,4 +24,12 @@ export type MealResultType = {
   totalCalories: number;
   source?: string;
   ingredients?: IngredientBreakdown[];
+};
+
+export type MealHistoryItem = {
+  dishName: string;
+  servings: number;
+  caloriesPerServing: number;
+  totalCalories: number;
+  timestamp: string;
 }; 
