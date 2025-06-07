@@ -30,12 +30,13 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Find user
+    // Find user with auth data
     const user = await prisma.user.findUnique({
       where: { email },
+      include: { auth: true }
     });
 
-    if (!user) {
+    if (!user || !user.auth) {
       return NextResponse.json(
         { error: 'Invalid credentials' },
         { status: 401 }
@@ -43,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Verify password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await bcrypt.compare(password, user.auth.password);
 
     if (!isPasswordValid) {
       return NextResponse.json(
@@ -52,20 +53,45 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Generate JWT token
-    const token = jwt.sign(
+    // Generate new session token
+    const sessionToken = jwt.sign(
       { userId: user.id, email: user.email },
       JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '15d' }
     );
 
-    // Remove password from response
-    const { password: _, ...userWithoutPassword } = user;
+    // Calculate token expiry (15 days from now)
+    const tokenExpiry = new Date();
+    tokenExpiry.setDate(tokenExpiry.getDate() + 15);
 
-    return NextResponse.json({
-      user: userWithoutPassword,
-      token,
+    // Update auth record with new session token
+    await prisma.auth.update({
+      where: { userId: user.id },
+      data: {
+        sessionToken,
+        tokenExpiry,
+      },
     });
+
+    // Create response with session token cookie
+    const response = NextResponse.json({
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+      token: sessionToken,
+    });
+
+    response.cookies.set('session-token', sessionToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      expires: tokenExpiry,
+    });
+
+    return response;
   } catch (error) {
     console.error('Login error:', error);
     return NextResponse.json(

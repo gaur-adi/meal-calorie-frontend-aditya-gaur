@@ -4,6 +4,7 @@ import { Box, Container, Typography, Button, Grid, Paper } from '@mui/material';
 import { RestaurantMenu, TrendingUp, Timer, Lock } from '@mui/icons-material';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useAuthStore } from '@/stores/authStore';
 
 const demoFoods = [
   { name: 'Grilled Chicken Breast', calories: 165 },
@@ -15,6 +16,7 @@ const demoFoods = [
 
 export default function HomePage() {
   const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
   const [currentFoodIndex, setCurrentFoodIndex] = useState(0);
   const [isCalculating, setIsCalculating] = useState(false);
   const [showResult, setShowResult] = useState(false);
@@ -103,29 +105,82 @@ export default function HomePage() {
                 Simplify your nutrition tracking with our intelligent calorie calculator.
                 Quick, accurate, and easy to use.
               </Typography>
-              <Button
-                variant="contained"
-                size="large"
-                onClick={() => router.push('/calculate')}
-                sx={{
-                  bgcolor: 'white',
-                  color: '#4361ee',
-                  fontSize: '1.1rem',
-                  py: 1.5,
-                  px: 4,
-                  borderRadius: '12px',
-                  textTransform: 'none',
-                  fontWeight: 600,
-                  '&:hover': {
-                    bgcolor: '#f8fafc',
-                    transform: 'translateY(-2px)',
-                    boxShadow: '0 6px 20px rgba(255,255,255,0.2)',
-                  },
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Get Started
-              </Button>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                {isAuthenticated ? (
+                  <Button
+                    variant="contained"
+                    size="large"
+                    onClick={() => router.push('/dashboard')}
+                    sx={{
+                      bgcolor: 'white',
+                      color: '#4361ee',
+                      fontSize: '1.1rem',
+                      py: 1.5,
+                      px: 4,
+                      borderRadius: '12px',
+                      textTransform: 'none',
+                      fontWeight: 600,
+                      '&:hover': {
+                        bgcolor: '#f8fafc',
+                        transform: 'translateY(-2px)',
+                        boxShadow: '0 6px 20px rgba(255,255,255,0.2)',
+                      },
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    Go to Dashboard
+                  </Button>
+                ) : (
+                  <>
+                    <Button
+                      variant="contained"
+                      size="large"
+                      onClick={() => router.push('/login')}
+                      sx={{
+                        bgcolor: 'white',
+                        color: '#4361ee',
+                        fontSize: '1.1rem',
+                        py: 1.5,
+                        px: 4,
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        '&:hover': {
+                          bgcolor: '#f8fafc',
+                          transform: 'translateY(-2px)',
+                          boxShadow: '0 6px 20px rgba(255,255,255,0.2)',
+                        },
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      Login
+                    </Button>
+                    <Button
+                      variant="outlined"
+                      size="large"
+                      onClick={() => router.push('/register')}
+                      sx={{
+                        color: 'white',
+                        borderColor: 'white',
+                        fontSize: '1.1rem',
+                        py: 1.5,
+                        px: 4,
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        fontWeight: 600,
+                        '&:hover': {
+                          borderColor: 'white',
+                          bgcolor: 'rgba(255,255,255,0.1)',
+                          transform: 'translateY(-2px)',
+                        },
+                        transition: 'all 0.2s ease',
+                      }}
+                    >
+                      Register
+                    </Button>
+                  </>
+                )}
+              </Box>
             </Grid>
             <Grid item xs={12} md={6}>
               <Box

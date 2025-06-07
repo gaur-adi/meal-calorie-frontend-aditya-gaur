@@ -1,16 +1,20 @@
 import { NextResponse } from "next/server";
 import { headers } from "next/headers";
-
-interface Nutrient {
-  nutrientId: number;
-  value: number;
-}
+import { protectRoute } from "@/lib/auth";
+import type { NextRequest } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 const USDA_API_KEY = process.env.USDA_API_KEY;
 const USDA_API_URL = "https://api.nal.usda.gov/fdc/v1";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // Verify authentication
+    const user = await protectRoute(request);
+    if (user instanceof NextResponse) {
+      return user; // Return error response if authentication failed
+    }
+
     // Handle CORS
     const headersList = await headers();
     const origin = headersList.get("origin") || "*";
@@ -74,51 +78,69 @@ export async function POST(request: Request) {
     const foodId = searchData.foods[0].fdcId;
 
     // Get detailed food information
-    const foodResponse = await fetch(
+    const detailsResponse = await fetch(
       `${USDA_API_URL}/food/${foodId}?api_key=${USDA_API_KEY}`
     );
 
-    if (!foodResponse.ok) {
+    if (!detailsResponse.ok) {
       throw new Error("Failed to get food details");
     }
 
-    const foodData = await foodResponse.json();
+    const detailsData = await detailsResponse.json();
 
     // Calculate calories
-    const caloriesPerServing = foodData.foodNutrients.find(
-      (nutrient: Nutrient) => nutrient.nutrientId === 1008
-    )?.value || 0;
+    const energyNutrient = detailsData.foodNutrients?.find(
+      (n: { nutrientName?: string; value: number }) => n.nutrientName?.toLowerCase().includes('energy')
+    );
 
+    if (!energyNutrient) {
+      return NextResponse.json(
+        { error: "Calorie information not available for this food item" },
+        { 
+          status: 404,
+          headers: {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          }
+        }
+      );
+    }
+
+    const caloriesPerServing = energyNutrient.value;
     const totalCalories = caloriesPerServing * (servings || 1);
+
+    // Save meal to database
+    await prisma.meal.create({
+      data: {
+        userId: user.id,
+        dishName,
+        servings: servings || 1,
+        calories: totalCalories,
+      },
+    });
 
     return NextResponse.json(
       {
-        dishName,
+        dish_name: dishName,
         servings: servings || 1,
-        caloriesPerServing,
-        totalCalories,
-        ingredients: [dishName],
+        calories_per_serving: caloriesPerServing,
+        total_calories: totalCalories,
+        source: "USDA Food Database",
       },
       {
         headers: {
           "Access-Control-Allow-Origin": origin,
           "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
           "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        }
+        },
       }
     );
   } catch (error) {
-    console.error("Error in calories API:", error);
+    console.error("Error:", error);
     return NextResponse.json(
-      { error: "Failed to calculate calories" },
-      { 
-        status: 500,
-        headers: {
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        }
-      }
+      { error: "Failed to process request" },
+      { status: 500 }
     );
   }
 } 

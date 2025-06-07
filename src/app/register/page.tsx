@@ -9,25 +9,30 @@ import Link from "next/link";
 export default function RegisterPage() {
   const router = useRouter();
   const register = useAuthStore((state) => state.register);
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    if (!name || !email || !password) {
+    if (!firstName || !lastName || !email || !password) {
       setError("Please fill in all fields");
       return;
     }
 
-    const success = register(email, password, name);
-    if (success) {
-      router.push("/dashboard");
-    } else {
-      setError("Email already exists");
+    try {
+      const success = await register(email, password, firstName, lastName);
+      if (success) {
+        router.push("/dashboard");
+      } else {
+        setError("Registration failed. Please try again.");
+      }
+    } catch (err) {
+      setError("An error occurred during registration");
     }
   };
 
@@ -45,9 +50,17 @@ export default function RegisterPage() {
         <form onSubmit={handleSubmit}>
           <TextField
             fullWidth
-            label="Name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            label="First Name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required
+            margin="normal"
+          />
+          <TextField
+            fullWidth
+            label="Last Name"
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
             required
             margin="normal"
           />

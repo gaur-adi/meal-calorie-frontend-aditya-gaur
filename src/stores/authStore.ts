@@ -1,58 +1,70 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import axios from 'axios';
 
 interface User {
+  id: string;
   email: string;
-  name: string;
-}
-
-interface StoredUser extends User {
-  password: string;
+  firstName: string;
+  lastName: string;
 }
 
 interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => boolean;
-  register: (email: string, password: string, name: string) => boolean;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string, firstName: string, lastName: string) => Promise<boolean>;
+  logout: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      user: null,
-      isAuthenticated: false,
-      login: (email: string, password: string) => {
-        const users = JSON.parse(localStorage.getItem("users") || "[]") as StoredUser[];
-        const user = users.find((u) => u.email === email && u.password === password);
-        
-        if (user) {
-          set({ user: { email: user.email, name: user.name }, isAuthenticated: true });
-          return true;
-        }
-        return false;
-      },
-      register: (email: string, password: string, name: string) => {
-        const users = JSON.parse(localStorage.getItem("users") || "[]") as StoredUser[];
-        
-        if (users.some((u) => u.email === email)) {
-          return false;
-        }
-        
-        users.push({ email, password, name });
-        localStorage.setItem("users", JSON.stringify(users));
-        
-        set({ user: { email, name }, isAuthenticated: true });
+export const useAuthStore = create<AuthState>((set) => ({
+  user: null,
+  isAuthenticated: false,
+
+  login: async (email: string, password: string) => {
+    try {
+      const response = await axios.post('/api/auth/login', {
+        email,
+        password,
+      });
+
+      if (response.data.user) {
+        set({ user: response.data.user, isAuthenticated: true });
         return true;
-      },
-      logout: () => {
-        set({ user: null, isAuthenticated: false });
-      },
-    }),
-    {
-      name: "auth-storage",
-      partialize: (state) => ({ user: state.user, isAuthenticated: state.isAuthenticated }),
+      }
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      return false;
     }
-  )
-); 
+  },
+
+  register: async (email: string, password: string, firstName: string, lastName: string) => {
+    try {
+      const response = await axios.post('/api/auth/register', {
+        email,
+        password,
+        firstName,
+        lastName,
+      });
+
+      if (response.data.user) {
+        set({ user: response.data.user, isAuthenticated: true });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Registration error:', error);
+      return false;
+    }
+  },
+
+  logout: async () => {
+    try {
+      // Clear session token cookie
+      await axios.post('/api/auth/logout');
+      set({ user: null, isAuthenticated: false });
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
+  },
+})); 
