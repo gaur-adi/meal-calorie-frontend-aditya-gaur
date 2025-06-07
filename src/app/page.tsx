@@ -1,13 +1,12 @@
 "use client";
 
-import { Box, Button, Container, Grid, Typography, Card, CardContent, Stack, TextField, CircularProgress, Paper } from '@mui/material';
+import { Box, Button, Container, Grid, Typography, Card, CardContent, Stack, TextField, CircularProgress } from '@mui/material';
 import Link from 'next/link';
 import { useState, useEffect, useRef } from 'react';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import TimerIcon from '@mui/icons-material/Timer';
 import LocalDiningIcon from '@mui/icons-material/LocalDining';
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
-import SearchIcon from '@mui/icons-material/Search';
 import PeopleIcon from '@mui/icons-material/People';
 
 export default function HomePage() {
@@ -17,7 +16,6 @@ export default function HomePage() {
   const [isTyping, setIsTyping] = useState(false);
   const [isCalculating, setIsCalculating] = useState(false);
   const [showResult, setShowResult] = useState(false);
-  const [servings, setServings] = useState(1);
   const typingInterval = useRef<NodeJS.Timeout | null>(null);
   const transitionTimeout = useRef<NodeJS.Timeout | null>(null);
   const animationTimeout = useRef<NodeJS.Timeout | null>(null);

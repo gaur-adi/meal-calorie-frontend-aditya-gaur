@@ -22,9 +22,6 @@ export async function middleware(request: NextRequest) {
   // Get path
   const path = request.nextUrl.pathname;
   
-  // Define public routes that don't require authentication
-  const isPublicRoute = path === '/' || path === '/login' || path === '/register';
-  
   // Define login/register routes
   const isAuthRoute = path === '/login' || path === '/register';
   

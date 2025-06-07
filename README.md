@@ -1,36 +1,127 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MealCalory - Meal Calorie Tracking Application
+
+A modern, user-friendly web application for tracking meal calories and nutritional information, built with Next.js, Material UI, and Prisma.
+
+![MealCalory App](/public/readme-header.png)
+
+## Features
+
+- **User Authentication**: Secure signup, login, and session management
+- **Meal Tracking**: Log meals with portion sizes and calorie information
+- **Meal History**: View and manage your logged meal history
+- **Calorie Calculation**: Automatically calculate total calories based on servings
+- **Responsive Design**: Optimized for both desktop and mobile devices
+
+## Tech Stack
+
+### Frontend
+- **Next.js 15**: React framework with App Router
+- **React 19**: UI component library
+- **Material UI 7**: Modern component library for styling
+- **Zustand**: State management
+- **React Hook Form**: Form handling with validation
+- **Axios**: HTTP client for API requests
+
+### Backend
+- **Next.js API Routes**: Server-side functionality
+- **Prisma 6**: ORM for database operations
+- **MongoDB**: Database for storing user and meal data
+- **JWT**: Authentication with JSON Web Tokens
+- **Bcrypt**: Password hashing and security
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- Node.js (v18 or higher)
+- MongoDB database (local or cloud-hosted)
+- npm or yarn package manager
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/meal-calory.git
+   cd meal-calory
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   # or
+   yarn install
+   ```
+
+3. Set up environment variables by creating a `.env.local` file:
+   ```
+   DATABASE_URL="your_mongodb_connection_string"
+   JWT_SECRET="your_jwt_secret_key"
+   ```
+
+4. Generate Prisma client:
+   ```bash
+   npx prisma generate
+   ```
+
+5. Run the development server:
+   ```bash
+   npm run dev
+   ```
+
+6. Open [http://localhost:3000](http://localhost:3000) in your browser
+
+## Project Structure
+
+```
+├── prisma/               # Database schema and migrations
+├── public/               # Static assets
+├── src/
+│   ├── app/              # Next.js App Router pages
+│   ├── components/       # React components
+│   ├── lib/              # Utility functions
+│   ├── middleware.ts     # Next.js middleware for auth
+│   ├── stores/           # Zustand state stores
+│   └── types/            # TypeScript type definitions
+├── .env.local            # Environment variables (create this)
+└── package.json          # Project dependencies
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Main Features Explained
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Authentication
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- Sign up with email, password, and profile details
+- JWT-based authentication with secure cookie storage
+- Protected routes and API endpoints
 
-## Learn More
+### Dashboard
 
-To learn more about Next.js, take a look at the following resources:
+The dashboard is the main interface where users can:
+- Input meal information with the meal form
+- See calculated calorie information in real-time
+- View their meal history with filtering options
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Meal Tracking
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- Add meals with dish name, servings, and calorie information
+- Automatically calculate total calories
+- Save meals to your history for future reference
 
-## Deploy on Vercel
+## Contributing
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Fork the repository
+2. Create your feature branch: `git checkout -b feature/my-new-feature`
+3. Commit your changes: `git commit -am 'Add some feature'`
+4. Push to the branch: `git push origin feature/my-new-feature`
+5. Submit a pull request
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Acknowledgements
+
+- Next.js team for the amazing framework
+- Material UI for the component library
+- Prisma team for the ORM
+- All contributors and users of this application
