@@ -1,12 +1,81 @@
 "use client";
 
-import { Box, Button, Container, Grid, Typography, Card, CardContent, Stack } from '@mui/material';
+import { Box, Button, Container, Grid, Typography, Card, CardContent, Stack, TextField, CircularProgress, Paper } from '@mui/material';
 import Link from 'next/link';
+import { useState, useEffect, useRef } from 'react';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import TimerIcon from '@mui/icons-material/Timer';
 import LocalDiningIcon from '@mui/icons-material/LocalDining';
+import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
+import SearchIcon from '@mui/icons-material/Search';
+import PeopleIcon from '@mui/icons-material/People';
 
 export default function HomePage() {
+  // State for demo calculator
+  const [displayText, setDisplayText] = useState('');
+  const [dishIndex, setDishIndex] = useState(0);
+  const [isTyping, setIsTyping] = useState(false);
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [servings, setServings] = useState(1);
+  const typingInterval = useRef<NodeJS.Timeout | null>(null);
+  const transitionTimeout = useRef<NodeJS.Timeout | null>(null);
+  const animationTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Sample dishes with categories and calories
+  const sampleDishes = [
+    { name: 'Pizza', category: 'Fast Food', calories: 250 },
+    { name: 'Salad', category: 'Healthy', calories: 120 },
+    { name: 'Burger', category: 'Fast Food', calories: 88 },
+    { name: 'Pasta', category: 'Italian', calories: 340 },
+    { name: 'Chicken Curry', category: 'Indian', calories: 107 },
+    { name: 'Sushi', category: 'Japanese', calories: 94 },
+  ];
+
+  // Animation function for typing effect
+  const animateTyping = (text: string) => {
+    setIsTyping(true);
+    setDisplayText('');
+    let i = 0;
+    
+    typingInterval.current = setInterval(() => {
+      if (i < text.length) {
+        setDisplayText(text);
+        i++;
+      } else {
+        clearInterval(typingInterval.current!);
+        setIsTyping(false);
+        
+        // Start calculating animation after typing completes
+        setIsCalculating(true);
+        
+        // Show result after a delay
+        transitionTimeout.current = setTimeout(() => {
+          setIsCalculating(false);
+          setShowResult(true);
+          
+          // Move to next dish after showing result
+          animationTimeout.current = setTimeout(() => {
+            setShowResult(false);
+            setDishIndex((prevIndex) => (prevIndex + 1) % sampleDishes.length);
+          }, 3000); // Show result for 3 seconds
+        }, 1500); // Calculate for 1.5 seconds
+      }
+    }, 150); // Type each character with 150ms delay
+  };
+
+  // Start animation when component mounts or dish changes
+  useEffect(() => {
+    // Start typing the current dish name
+    animateTyping(sampleDishes[dishIndex].name);
+    
+    // Cleanup function to clear all timeouts and intervals
+    return () => {
+      if (typingInterval.current) clearInterval(typingInterval.current);
+      if (transitionTimeout.current) clearTimeout(transitionTimeout.current);
+      if (animationTimeout.current) clearTimeout(animationTimeout.current);
+    };
+  }, [dishIndex]);
 
   const features = [
     {
@@ -33,10 +102,13 @@ export default function HomePage() {
         sx={{
           background: 'linear-gradient(135deg, #4361ee 0%, #3730a3 100%)',
           color: 'white',
-          pt: { xs: 10, md: 16 },
-          pb: { xs: 12, md: 20 },
+          pt: { xs: 6, md: 8 },
+          pb: { xs: 6, md: 8 },
           position: 'relative',
           overflow: 'hidden',
+          minHeight: '80vh',
+          display: 'flex',
+          alignItems: 'center',
         }}
       >
         {/* Abstract Background Elements */}
@@ -141,39 +213,71 @@ export default function HomePage() {
               </Stack>
             </Grid>
             <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: 'center' }}>
+              {/* Demo Calculator - MealForm Style */}
               <Box
                 sx={{
-                  position: 'relative',
-                  width: { xs: '100%', md: '90%' },
-                  height: { xs: 300, md: 400 },
-                  borderRadius: '20px',
-                  overflow: 'hidden',
-                  boxShadow: '0 20px 40px rgba(0, 0, 0, 0.2)',
+                  background: '#fff',
+                  borderRadius: '16px',
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
+                  p: 3,
+                  width: '100%',
+                  maxWidth: '450px',
+                  height: '350px', // Fixed height to prevent resizing
+                  display: 'flex',
+                  flexDirection: 'column',
                 }}
               >
-                <Box
-                  sx={{
-                    position: 'relative',
-                    width: '100%',
-                    height: '100%',
-                    bgcolor: 'white',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {/* Food image */}
-                  <Box
-                    component="img"
-                    src="https://images.unsplash.com/photo-1490645935967-10de6ba17061?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1470&q=80"
-                    alt="Healthy meal with fresh vegetables"
-                    sx={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
+
+                <Box sx={{ mb: 2 }}>
+                  <Typography sx={{ mb: 1, fontSize: '0.875rem', fontWeight: 500, color: '#64748b' }}>
+                    Dish Name
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    placeholder="e.g. Pizza, Salad, Pasta"
+                    value={displayText}
+                    InputProps={{
+                      readOnly: true,
+                      endAdornment: isTyping ? <span className="cursor">|</span> : null,
+                      startAdornment: <RestaurantMenuIcon sx={{ mr: 1, color: 'rgba(0, 0, 0, 0.54)' }} />,
                     }}
+                    variant="outlined"
                   />
+                  <Typography variant="caption" sx={{ display: 'block', mt: 1, color: '#64748b' }}>
+                    Demo showing: Pizza, Salad, Burger, Pasta, Chicken Curry, Sushi
+                  </Typography>
+                </Box>
+
+                <Box sx={{ mb: 3 }}>
+                  <Typography sx={{ mb: 1, fontSize: '0.875rem', fontWeight: 500, color: '#64748b' }}>
+                    Number of Servings
+                  </Typography>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    value="1"
+                    InputProps={{
+                      readOnly: true,
+                      startAdornment: <PeopleIcon sx={{ mr: 1, color: 'rgba(0, 0, 0, 0.54)' }} />,
+                    }}
+                    variant="outlined"
+                  />
+                </Box>
+
+                {/* Results or Calculating State with fixed height */}
+                <Box sx={{ flexGrow: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '76px' }}>
+                  {isCalculating ? (
+                    <Box sx={{ p: 2, bgcolor: '#f8fafc', borderRadius: '8px', textAlign: 'center', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%' }}>
+                      <CircularProgress size={20} sx={{ mr: 2, color: '#4361ee' }} />
+                      <Typography>Calculating calories...</Typography>
+                    </Box>
+                  ) : showResult ? (
+                    <Box sx={{ p: 2, bgcolor: '#f0f9ff', borderRadius: '8px', textAlign: 'center', width: '100%' }}>
+                      <Typography variant="h6" sx={{ color: '#1e293b', fontWeight: 600 }}>
+                        {sampleDishes[dishIndex].name}: {sampleDishes[dishIndex].calories} calories
+                      </Typography>
+                    </Box>
+                  ) : null}
                 </Box>
               </Box>
             </Grid>
@@ -253,102 +357,6 @@ export default function HomePage() {
           </Grid>
         </Box>
       </Container>
-
-      {/* Testimonials Section */}
-      <Box
-        sx={{
-          bgcolor: '#f1f5f9',
-          py: { xs: 8, md: 12 },
-        }}
-      >
-        <Container maxWidth="lg">
-          <Typography
-            variant="h3"
-            component="h2"
-            align="center"
-            sx={{
-              fontWeight: 700,
-              mb: 2,
-              color: '#1e293b',
-            }}
-          >
-            What Our Users Say
-          </Typography>
-          <Typography
-            variant="h6"
-            component="p"
-            align="center"
-            sx={{
-              maxWidth: 700,
-              mx: 'auto',
-              mb: 8,
-              color: '#64748b',
-              fontWeight: 400,
-            }}
-          >
-            Hear from people who have transformed their relationship with food
-          </Typography>
-
-          <Grid container spacing={4}>
-            {[
-              {
-                quote: "This app has completely changed how I track my nutrition. It's so easy to use and the calorie estimates are very accurate.",
-                author: "Sarah J.",
-                role: "Fitness Enthusiast",
-              },
-              {
-                quote: "I've lost 15 pounds since I started using this app. Being able to quickly check calories for any meal has made healthy eating so much easier.",
-                author: "Michael T.",
-                role: "Software Developer",
-              },
-              {
-                quote: "As a nutritionist, I recommend this app to all my clients. The interface is clean and the data is reliable.",
-                author: "Dr. Lisa Wang",
-                role: "Certified Nutritionist",
-              },
-            ].map((testimonial, index) => (
-              <Grid item xs={12} md={4} key={index}>
-                <Card
-                  sx={{
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    borderRadius: '16px',
-                    boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.05)',
-                    transition: 'transform 0.3s ease',
-                    '&:hover': {
-                      transform: 'translateY(-5px)',
-                    },
-                  }}
-                >
-                  <CardContent sx={{ p: 4, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-                    <Typography
-                      variant="body1"
-                      sx={{
-                        mb: 3,
-                        fontSize: '1.1rem',
-                        fontStyle: 'italic',
-                        color: '#475569',
-                        flexGrow: 1,
-                      }}
-                    >
-                      "{testimonial.quote}"
-                    </Typography>
-                    <Box>
-                      <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#1e293b' }}>
-                        {testimonial.author}
-                      </Typography>
-                      <Typography variant="body2" sx={{ color: '#64748b' }}>
-                        {testimonial.role}
-                      </Typography>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
-      </Box>
 
       {/* CTA Section */}
       <Box

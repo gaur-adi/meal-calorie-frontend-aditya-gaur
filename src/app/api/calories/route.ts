@@ -27,8 +27,7 @@ export async function POST(request: Request) {
       params: {
         api_key: USDA_API_KEY,
         query: dishName,
-        pageSize: 1,
-        dataType: "Foundation,SR Legacy"
+        pageSize: 1
       }
     });
 

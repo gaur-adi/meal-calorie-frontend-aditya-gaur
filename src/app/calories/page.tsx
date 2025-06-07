@@ -2,7 +2,7 @@
 
 import { useMealStore } from "@/stores/mealStore";
 import { MealForm } from "@/components/MealForm";
-import { ResultCard } from "@/components/ResultCard";
+import ResultCard from "@/components/ResultCard";
 import { useAuthStore } from "@/stores/authStore";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
@@ -27,7 +27,7 @@ export default function CaloriesPage() {
       <h1 className="text-3xl font-bold mb-2">Meal Calorie Lookup</h1>
       <div className="w-full max-w-4xl p-4">
         <MealForm />
-        {result && <ResultCard result={result} />}
+        {result && <ResultCard />}
       </div>
     </div>
   );
