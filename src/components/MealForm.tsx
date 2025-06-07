@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Button, TextField, Box, Typography } from '@mui/material';
 import { useMealStore } from "@/stores/mealStore";
+import { useAuthStore } from "@/stores/authStore";
 import toast from "react-hot-toast";
 import RestaurantMenuIcon from '@mui/icons-material/RestaurantMenu';
 import PeopleIcon from '@mui/icons-material/People';
@@ -22,6 +23,7 @@ interface MealFormValues {
 
 export function MealForm() {
   const { searchCalories, loading, error } = useMealStore();
+  const { user } = useAuthStore();
   const form = useForm<MealFormValues>({
     resolver: zodResolver(mealSchema),
     defaultValues: { dish_name: "", servings: 1 },
@@ -60,7 +62,7 @@ export function MealForm() {
           fontSize: '1.5rem',
         }}
       >
-        Calculate Meal Calories
+        {`${user?.firstName || 'Your'}'s Meal`}
       </Typography>
 
       <Box sx={{ mb: 2 }}>
@@ -133,7 +135,7 @@ export function MealForm() {
           },
         }}
       >
-        {loading ? "Calculating..." : "Calculate Calories"}
+        {loading ? "Calculating..." : "Find Calories"}
       </Button>
     </Box>
   );

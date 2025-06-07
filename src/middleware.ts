@@ -25,6 +25,9 @@ export async function middleware(request: NextRequest) {
   // Define public routes that don't require authentication
   const isPublicRoute = path === '/' || path === '/login' || path === '/register';
   
+  // Define login/register routes
+  const isAuthRoute = path === '/login' || path === '/register';
+  
   // Define protected routes that require authentication
   const isProtectedRoute = path === '/dashboard' || path.startsWith('/dashboard/');
   
@@ -48,7 +51,7 @@ export async function middleware(request: NextRequest) {
   }
   
   // Redirect to dashboard if accessing login/register when already authenticated
-  if (isPublicRoute && isAuthenticated) {
+  if (isAuthRoute && isAuthenticated) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
